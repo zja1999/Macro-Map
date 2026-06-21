@@ -1,6 +1,8 @@
 # Macro Map
 
-A Python/Streamlit prototype for selecting an area on a map, finding unique fast-food chains in that area, and preparing nutrition/menu macro data for later joining.
+A Python/Streamlit prototype for selecting an area on a map, finding unique fast-food chains in that area, and matching those chains to local nutrition/menu macro CSV files.
+
+The app is currently optimized for Texas-area testing, but most of the code is written so the map/search workflow can grow beyond the prototype.
 
 ## What works now
 
@@ -14,17 +16,23 @@ A Python/Streamlit prototype for selecting an area on a map, finding unique fast
 
 2. **Nutrition file library**
    - Put one real CSV per chain in `data/nutrition/`.
-   - Example real files:
-     - `data/nutrition/chick_fil_a.csv`
-     - `data/nutrition/mcdonalds.csv`
-     - `data/nutrition/taco_bell.csv`
    - The app loads real CSVs in that folder for matching/coverage, but the macro table stays hidden until you draw/search an area.
    - After a selection, **Menu macros for selected area** shows only rows for chains found in that area.
    - Template/example files are ignored:
      - files starting with `_` or `.`
      - files ending in `.example.csv` or `.template.csv`
 
-3. **Nutrition Parser**
+3. **Single item recommendations**
+   - After selecting an area with matching nutrition data, the app can rank individual menu items by protein goal and calorie limit.
+   - The recommender intentionally avoids combo-building; it only recommends single menu items.
+
+4. **Missing nutrition requests**
+   - Missing chains show a request link in the unique-chain table.
+   - The **Request missing nutrition data** panel lets a user pick a missing chain and open a pre-filled GitHub issue.
+   - Users without GitHub can copy a prepared request message.
+   - Optional email requests can be enabled with Streamlit secrets or an environment variable.
+
+5. **Nutrition Parser**
    - Upload a `.pdf` or `.txt` nutrition file.
    - Extract text from text-based PDFs with `pdfplumber`.
    - Parse nutrition rows into a stable CSV schema:
@@ -69,24 +77,25 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m streamlit run app.py
 ```
 
+## Optional request email setup
 
-## Preloaded test nutrition files
+GitHub issues are the default request path. To also show an **Email request** button for users without GitHub, configure one of these:
 
-This version includes a few small **sample/test-only** nutrition CSVs so you can verify that the map chain list turns green when data is available and that the selected-area macro table filters correctly. Included test files:
+### Streamlit secrets
 
-```text
-data/nutrition/chick_fil_a.csv
-data/nutrition/mcdonalds.csv
-data/nutrition/taco_bell.csv
-data/nutrition/whataburger.csv
-data/nutrition/subway.csv
-data/nutrition/chipotle.csv
-data/nutrition/wendys.csv
-data/nutrition/sonic.csv
-data/nutrition/burger_king.csv
+```toml
+# .streamlit/secrets.toml
+contact_email = "you@example.com"
 ```
 
-These rows are placeholders and include `is_sample_data=TRUE`. Replace or delete them when you add real nutrition data.
+### Environment variable
+
+```cmd
+set MACRO_MAP_CONTACT_EMAIL=you@example.com
+streamlit run app.py
+```
+
+On Streamlit Community Cloud, add `contact_email` in the app's Secrets settings.
 
 ## Adding nutrition data manually
 
@@ -161,21 +170,56 @@ Best practical workflow:
 5. Add chain-specific cleanup rules in `src/nutrition_parser.py` as you encounter new formats.
 6. For scanned PDFs, run OCR before parsing.
 
+## Quality checks
+
+Install test dependencies:
+
+```cmd
+pip install -r requirements.txt -r requirements-dev.txt
+```
+
+Run tests:
+
+```cmd
+pytest -q
+```
+
+Current tests cover:
+
+- chain alias normalization
+- nutrition CSV loading/filtering
+- single-item recommendation ranking
+
+A GitHub Actions workflow also runs the test suite on pushes to `main`.
+
 ## Project structure
 
 ```text
 menu_macro_map/
   app.py
   requirements.txt
+  requirements-dev.txt
   README.md
+  .github/
+    ISSUE_TEMPLATE/
+      nutrition-request.md
+    workflows/
+      ci.yml
   scripts/
     parse_nutrition.py
   src/
+    app_main.py
     chain_normalizer.py
     geojson_utils.py
     nutrition_parser.py
     nutrition_store.py
     osm_overpass.py
+    recommender.py
+    ui_helpers.py
+  tests/
+    test_chain_normalizer.py
+    test_nutrition_store.py
+    test_recommender.py
   data/
     menu_items.example.csv
     nutrition/
