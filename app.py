@@ -290,6 +290,8 @@ def render_map_chain_finder() -> None:
         st.session_state.locations = pd.DataFrame()
     if "chains" not in st.session_state:
         st.session_state.chains = pd.DataFrame()
+    if "map_reset_token" not in st.session_state:
+        st.session_state.map_reset_token = 0
 
     with left:
         m = build_map(locations=st.session_state.locations)
@@ -298,19 +300,31 @@ def render_map_chain_finder() -> None:
             height=MAP_HEIGHT_PX,
             use_container_width=True,
             returned_objects=["all_drawings", "last_active_drawing"],
+            key=f"macro_map_{st.session_state.map_reset_token}",
         )
 
     with right:
         st.subheader("Selection")
-        if st.button("Clear results"):
+        button_left, button_right = st.columns(2)
+        with button_left:
+            find_clicked = st.button("Find fast-food chains", type="primary")
+        with button_right:
+            clear_clicked = st.button("Clear selection")
+
+        if clear_clicked:
             st.session_state.locations = pd.DataFrame()
             st.session_state.chains = pd.DataFrame()
+            st.session_state.map_reset_token += 1
             st.rerun()
+
         st.caption(f"Draw a rectangle or polygon under about {MAX_QUERY_AREA_SQ_MI:.0f} sq mi, then search.")
         latest_feature = get_latest_drawn_feature(map_data)
 
         if latest_feature is None:
-            st.info("Draw a rectangle or polygon on the map to select an area.")
+            if find_clicked:
+                st.warning("Draw a rectangle or polygon on the map before searching.")
+            else:
+                st.info("Draw a rectangle or polygon on the map to select an area.")
         else:
             try:
                 latlon = polygon_latlon_from_feature(latest_feature)
@@ -324,7 +338,7 @@ def render_map_chain_finder() -> None:
                         "That area is too large for the public Overpass API prototype. "
                         "Zoom in and draw a smaller box, then search again."
                     )
-                elif st.button("Find fast-food chains", type="primary"):
+                elif find_clicked:
                     try:
                         with st.spinner("Searching OpenStreetMap..."):
                             # Use bbox for reliable Overpass querying, then filter back to the exact drawn polygon.
@@ -343,6 +357,8 @@ def render_map_chain_finder() -> None:
                         )
                         with st.expander("Technical details"):
                             st.code(str(exc))
+                else:
+                    st.info("Selection ready. Click **Find fast-food chains** to search this area.")
             except SelectionError as exc:
                 st.error(str(exc))
 
