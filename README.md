@@ -37,6 +37,8 @@ The app is currently optimized for Texas-area testing, but most of the code is w
    - Users can check menu items from the selected-chain results and add them to a running macro counter.
    - The counter tracks calories, protein, carbs, fat, sodium, fiber, and sugar.
    - Users can set an in-session profile name and macro targets.
+   - Users can apply diet-style macro presets from the current calorie target: Balanced, High protein, Lower carb, Keto-style, and Endurance.
+   - Users can use the body-weight protein helper to set protein by body weight/activity, then split remaining calories by diet style.
    - Users can download/upload a JSON profile/day file as a temporary persistence workaround.
 
 6. **Missing nutrition requests**
@@ -109,6 +111,40 @@ streamlit run app.py
 ```
 
 On Streamlit Community Cloud, add `contact_email` in the app's Secrets settings.
+
+## Macro presets
+
+Macro target presets use the current calorie target and convert calories to grams using:
+
+```text
+protein: 4 kcal/g
+carbs: 4 kcal/g
+fat: 9 kcal/g
+```
+
+Current presets:
+
+```text
+Balanced:     30% protein / 40% carbs / 30% fat
+High protein: 35% protein / 35% carbs / 30% fat
+Lower carb:   35% protein / 25% carbs / 40% fat
+Keto-style:   25% protein /  5% carbs / 70% fat
+Endurance:    25% protein / 55% carbs / 20% fat
+```
+
+The body-weight protein helper uses the current calorie target, sets protein from body weight and activity, then splits the remaining calories between carbs and fat using the chosen diet style.
+
+Protein factors used by the helper:
+
+```text
+Sedentary / general health: 0.8 g/kg
+Light activity:             1.4 g/kg
+Moderate training:          1.6 g/kg
+Heavy training:             1.8 g/kg
+Cutting / lean-mass focus:  2.0 g/kg
+```
+
+These are practical starting points, not medical advice. For now the app does not estimate daily calorie needs from age, sex, height, and activity; it only works from the calorie target the user enters.
 
 ## User profiles and persistence
 
@@ -245,6 +281,7 @@ menu_macro_map/
     parse_nutrition.py
   src/
     app_main.py
+    app_main_compact.py
     app_main_tabs.py
     chain_normalizer.py
     geojson_utils.py
