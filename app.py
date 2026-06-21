@@ -31,7 +31,7 @@ MAP_HEIGHT_PX = 620
 
 
 def inject_responsive_styles() -> None:
-    """Keep the app in a desktop-style two-column layout on mobile screens."""
+    """Tighten Streamlit/Folium layout on phones without changing desktop behavior much."""
     st.markdown(
         """
         <style>
@@ -61,53 +61,42 @@ def inject_responsive_styles() -> None:
                 width: 100%;
             }
 
-            /*
-               Phone layout: keep the desktop-style map/results columns side-by-side
-               instead of allowing Streamlit to stack them. Very narrow phones get a
-               horizontal page scroll, which preserves the desktop layout instead of
-               making the map dominate the whole screen.
-            */
+            /* Streamlit's default mobile stacking can still leave awkward widths. */
             @media (max-width: 768px) {
-                .stApp {
-                    overflow-x: auto;
-                }
-
                 .block-container {
-                    min-width: 760px;
-                    max-width: 760px;
                     padding-left: 0.65rem;
                     padding-right: 0.65rem;
                     padding-top: 0.6rem;
                 }
 
                 h1 {
-                    font-size: 1.95rem !important;
+                    font-size: 1.75rem !important;
                     line-height: 1.15 !important;
                 }
 
                 h2, h3 {
-                    font-size: 1.15rem !important;
+                    font-size: 1.1rem !important;
                     line-height: 1.25 !important;
                 }
 
                 p, .stCaption, div[data-testid="stMarkdownContainer"] {
-                    font-size: 0.9rem;
+                    font-size: 0.92rem;
                 }
 
                 div[data-testid="stHorizontalBlock"] {
-                    flex-direction: row !important;
-                    flex-wrap: nowrap !important;
-                    align-items: flex-start !important;
-                    gap: 1rem !important;
+                    flex-direction: column !important;
+                    gap: 0.85rem !important;
                 }
 
                 div[data-testid="column"] {
-                    min-width: 0 !important;
+                    width: 100% !important;
+                    min-width: 100% !important;
+                    flex: 1 1 100% !important;
                 }
 
                 iframe[title="streamlit_folium.st_folium"] {
-                    height: 380px !important;
-                    min-height: 380px !important;
+                    height: 430px !important;
+                    min-height: 430px !important;
                     border-radius: 0.6rem;
                 }
 
@@ -117,9 +106,9 @@ def inject_responsive_styles() -> None:
                 }
 
                 .leaflet-draw-toolbar a {
-                    width: 32px !important;
-                    height: 32px !important;
-                    line-height: 32px !important;
+                    width: 34px !important;
+                    height: 34px !important;
+                    line-height: 34px !important;
                 }
             }
         </style>
