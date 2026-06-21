@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from urllib.parse import urlencode
+
 import folium
 import pandas as pd
 import streamlit as st
@@ -28,6 +30,8 @@ DEFAULT_CENTER = (31.0000, -99.0000)  # Texas-wide starting view.
 DEFAULT_ZOOM = 6
 MAX_QUERY_AREA_SQ_MI = 250.0
 MAP_HEIGHT_PX = 620
+GITHUB_REPO_URL = "https://github.com/zja1999/Macro-Map"
+GITHUB_ISSUE_TEMPLATE = "nutrition-request.md"
 
 
 def inject_responsive_styles() -> None:
@@ -178,6 +182,103 @@ def style_chain_table(df: pd.DataFrame):
     return df.style.apply(row_style, axis=1)
 
 
+def nutrition_request_url(chain: str) -> str:
+    """Return a pre-filled GitHub issue URL for requesting nutrition data."""
+    params = urlencode(
+        {
+            "template": GITHUB_ISSUE_TEMPLATE,
+            "title": f"Nutrition data request: {chain}",
+            "body": (
+                f"Chain requested from Macro Map: {chain}\n\n"
+                "Please add a matching CSV in `data/nutrition/` using the standard nutrition format."
+            ),
+        }
+    )
+    return f"{GITHUB_REPO_URL}/issues/new?{params}"
+
+
+def recommend_single_items(menu_items: pd.DataFrame, protein_goal: float, calorie_limit: float, top_n: int = 10) -> pd.DataFrame:
+    """Rank individual menu items by protein goal first, then calories."""
+    if menu_items.empty or not {"calories", "protein_g"}.issubset(menu_items.columns):
+        return pd.DataFrame()
+
+    df = menu_items.copy()
+    numeric_cols = ["calories", "protein_g", "carbs_g", "fat_g", "sodium_mg", "fiber_g", "sugar_g"]
+    for col in numeric_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    df = df.dropna(subset=["calories", "protein_g"])
+    if df.empty:
+        return df
+
+    calorie_limit = max(float(calorie_limit), 1.0)
+    protein_goal = max(float(protein_goal), 0.0)
+
+    under_limit = df[df["calories"] <= calorie_limit].copy()
+    if not under_limit.empty:
+        df = under_limit
+
+    df["protein_gap_g"] = (protein_goal - df["protein_g"]).clip(lower=0)
+    df["calories_remaining"] = calorie_limit - df["calories"]
+    df["meets_goal"] = (df["protein_g"] >= protein_goal) & (df["calories"] <= calorie_limit)
+
+    return df.sort_values(
+        by=["protein_gap_g", "protein_g", "calories"],
+        ascending=[True, False, True],
+    ).head(top_n)
+
+
+def render_single_item_recommendations(menu_items: pd.DataFrame) -> None:
+    """Render a minimal macro-target recommender for individual menu items only."""
+    with st.expander("Single item recommendations", expanded=True):
+        st.caption("Find individual menu items from the selected area that best match your protein goal and calorie limit.")
+
+        input_a, input_b = st.columns(2)
+        protein_goal = input_a.number_input("Protein goal (g)", min_value=0, max_value=200, value=30, step=5)
+        calorie_limit = input_b.number_input("Calorie limit", min_value=1, max_value=3000, value=700, step=50)
+
+        recommendations = recommend_single_items(menu_items, protein_goal, calorie_limit)
+
+        if recommendations.empty:
+            st.info("No recommendable menu items found for the selected chains yet.")
+            return
+
+        if not bool((recommendations["calories"] <= calorie_limit).all()):
+            st.warning("No items were under the calorie limit, so the closest available items are shown instead.")
+
+        display_cols = [
+            "chain",
+            "category",
+            "item_name",
+            "calories",
+            "protein_g",
+            "carbs_g",
+            "fat_g",
+            "sodium_mg",
+            "meets_goal",
+        ]
+        present_cols = [col for col in display_cols if col in recommendations.columns]
+
+        st.dataframe(
+            recommendations[present_cols],
+            use_container_width=True,
+            hide_index=True,
+            height=dataframe_height(len(recommendations), min_height=220, max_height=420),
+            column_config={
+                "chain": "Chain",
+                "category": "Category",
+                "item_name": "Item",
+                "calories": "Calories",
+                "protein_g": "Protein (g)",
+                "carbs_g": "Carbs (g)",
+                "fat_g": "Fat (g)",
+                "sodium_mg": "Sodium (mg)",
+                "meets_goal": "Meets goal",
+            },
+        )
+
+
 def render_map_chain_finder() -> None:
     st.caption("Draw an area on the Texas map, then list unique fast-food chains inside it.")
 
@@ -262,7 +363,11 @@ def render_map_chain_finder() -> None:
             metric_b.metric("Locations found", len(locations))
             st.caption(f"Nutrition coverage: **{covered_count}/{len(annotated_chains)} chains** have CSVs on file.")
 
-            display_chains = annotated_chains[["chain", "locations", "nutrition_status", "nutrition_on_file"]]
+            display_chains = annotated_chains[["chain", "locations", "nutrition_status", "nutrition_on_file"]].copy()
+            display_chains["request_addition"] = display_chains.apply(
+                lambda row: nutrition_request_url(row["chain"]) if not bool(row["nutrition_on_file"]) else "",
+                axis=1,
+            )
             st.dataframe(
                 style_chain_table(display_chains),
                 use_container_width=True,
@@ -273,8 +378,10 @@ def render_map_chain_finder() -> None:
                     "locations": "# Locations",
                     "nutrition_status": "Nutrition",
                     "nutrition_on_file": None,
+                    "request_addition": st.column_config.LinkColumn("Request addition", display_text="Request"),
                 },
             )
+            st.caption("For missing chains, use the request link to open a pre-filled GitHub issue.")
             st.download_button(
                 "Download chain list CSV",
                 data=annotated_chains.drop(columns=["chain_key"], errors="ignore").to_csv(index=False).encode("utf-8"),
@@ -332,37 +439,40 @@ def render_map_chain_finder() -> None:
                     if bool(sample_mask.any()):
                         st.warning("Some displayed macro rows are sample test data. Replace those CSVs with real nutrition files before using the numbers.")
 
-                preferred_cols = [
-                    "chain",
-                    "category",
-                    "item_name",
-                    "calories",
-                    "protein_g",
-                    "carbs_g",
-                    "fat_g",
-                    "serving_size",
-                    "sodium_mg",
-                    "fiber_g",
-                    "sugar_g",
-                ]
-                present_cols = [col for col in preferred_cols if col in menu_items.columns]
-                extra_cols = [
-                    col
-                    for col in menu_items.columns
-                    if col not in present_cols and col not in {"chain_key", "source_file"}
-                ]
-                st.dataframe(
-                    menu_items[present_cols + extra_cols],
-                    use_container_width=True,
-                    hide_index=True,
-                    height=dataframe_height(len(menu_items), min_height=240, max_height=560),
-                )
-                st.download_button(
-                    "Download selected menu macros CSV",
-                    data=menu_items.drop(columns=["chain_key"], errors="ignore").to_csv(index=False).encode("utf-8"),
-                    file_name="menu_macros_selected_area.csv",
-                    mime="text/csv",
-                )
+                render_single_item_recommendations(menu_items)
+
+                with st.expander("Menu macros for selected area", expanded=False):
+                    preferred_cols = [
+                        "chain",
+                        "category",
+                        "item_name",
+                        "calories",
+                        "protein_g",
+                        "carbs_g",
+                        "fat_g",
+                        "serving_size",
+                        "sodium_mg",
+                        "fiber_g",
+                        "sugar_g",
+                    ]
+                    present_cols = [col for col in preferred_cols if col in menu_items.columns]
+                    extra_cols = [
+                        col
+                        for col in menu_items.columns
+                        if col not in present_cols and col not in {"chain_key", "source_file"}
+                    ]
+                    st.dataframe(
+                        menu_items[present_cols + extra_cols],
+                        use_container_width=True,
+                        hide_index=True,
+                        height=dataframe_height(len(menu_items), min_height=240, max_height=560),
+                    )
+                    st.download_button(
+                        "Download selected menu macros CSV",
+                        data=menu_items.drop(columns=["chain_key"], errors="ignore").to_csv(index=False).encode("utf-8"),
+                        file_name="menu_macros_selected_area.csv",
+                        mime="text/csv",
+                    )
 
 
 def main() -> None:
