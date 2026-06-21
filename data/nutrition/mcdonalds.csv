@@ -1,0 +1,4 @@
+chain,category,item_name,serving_size,calories,protein_g,carbs_g,fat_g,sodium_mg,fiber_g,sugar_g,is_sample_data
+McDonald's,Test Data,Sample Burger,1 item,390,22,33,19,760,2,7,TRUE
+McDonald's,Test Data,Sample Chicken Sandwich,1 item,470,25,46,20,990,2,6,TRUE
+McDonald's,Test Data,Sample Fries,medium,320,5,43,15,260,4,0,TRUE

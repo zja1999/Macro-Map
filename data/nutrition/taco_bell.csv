@@ -1,0 +1,4 @@
+chain,category,item_name,serving_size,calories,protein_g,carbs_g,fat_g,sodium_mg,fiber_g,sugar_g,is_sample_data
+Taco Bell,Test Data,Sample Crunchy Taco,1 item,170,8,13,10,310,3,1,TRUE
+Taco Bell,Test Data,Sample Burrito,1 item,380,14,54,12,1050,8,3,TRUE
+Taco Bell,Test Data,Sample Chicken Bowl,1 bowl,500,28,60,16,1250,9,4,TRUE

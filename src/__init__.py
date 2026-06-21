@@ -1,0 +1,1 @@
+"""Macro Map app package."""

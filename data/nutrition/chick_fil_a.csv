@@ -1,0 +1,177 @@
+﻿chain,category,item_name,calories,protein_g,carbs_g,fat_g,serving_size,serving_g,sodium_mg,fiber_g,sugar_g,sat_fat_g,trans_fat_g,cholesterol_mg,is_sample_data,source_note
+Chick-fil-A,Breakfast,Spicy Chicken Biscuit,450,19,44,22,153g,153,1570,3,5,8,0,40,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Breakfast,Chick-fil-A Chick-n-Minis®,360,20,41,13,127g,127,1060,2,8,4,0,60,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Breakfast,Egg White Grill,300,27,29,8,172g,172,990,1,2,4,0,65,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Breakfast,Hash Brown Scramble Burrito,700,34,51,40,304g,304,1770,3,2,12,0.5,415,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Breakfast,Hash Brown Scramble Bowl,470,29,19,30,233g,233,1350,2,2,9,0,415,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Breakfast,"Chicken, Egg & Cheese Biscuit",550,27,48,28,211g,211,1870,3,7,12,0,215,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Breakfast,"Bacon, Egg & Cheese Biscuit",420,15,38,23,145g,145,1220,2,4,11,0,180,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Breakfast,"Sausage, Egg & Cheese Biscuit",620,22,38,42,192g,192,1510,2,4,18,0,205,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Breakfast,"Chicken, Egg & Cheese Muffin",410,27,36,18,187g,187,1320,1,4,6,0,215,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Breakfast,"Bacon, Egg & Cheese Muffin",300,16,28,13,126g,126,780,1,2,6,0,180,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Breakfast,"Sausage, Egg & Cheese Muffin",490,23,29,32,173g,173,1000,1,1,13,0,205,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Breakfast,Hash Browns,270,3,23,18,77g,77,440,3,0,2.5,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Breakfast,Berry Parfait,270,13,35,9,206g,206,85,1,26,3.5,0,20,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Breakfast,Fruit Cup,70,1,16,0,125g,125,0,2,12,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Breakfast,Breakfast Breads,290,4,37,15,81g,81,760,2,4,6,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Breakfast,Chick-fil-A® Chicken Biscuit,460,19,45,23,153g,153,1510,2,6,8,0,45,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Entrées,Spicy Deluxe Sandwich,540,34,47,26,259g,259,1880,2,7,8,0,85,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Entrées,Chick-fil-A Chick-n-Strips®,310,29,16,14,136g,136,870,0,2,2.5,0,75,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Entrées,Chick-fil-A® Nuggets,250,27,11,11,113g,113,1210,0,1,2.5,0,85,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Entrées,Grilled Nuggets,130,25,1,3,95g,95,440,0,1,0.5,0,85,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Entrées,Chick-fil-A® Deluxe Sandwich,490,32,43,22,247g,247,1700,1,7,6,0,85,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Entrées,Spicy Chicken Sandwich,450,28,45,19,188g,188,1730,1,6,4,0,65,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Entrées,Grilled Chicken Sandwich,390,28,45,11,206g,206,765,3,11,2.5,0,75,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Entrées,Chick-fil-A® Grilled Chicken Club Sandwich,520,37,45,22,237g,237,1055,3,12,8,0,105,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Entrées,Chick-fil-A Cool Wrap®,660,43,32,45,231g,231,1420,14,5,9,0,110,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Entrées,Chick-fil-A® Chicken Sandwich,420,29,41,18,183g,183,1460,1,6,3.5,0,70,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Entrées,Honey Pepper Pimento Sandwich w/ Chick-fil-A® Filet,600,34,53,30,232g,232,1680,1,16,9,0,100,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Entrées,Honey Pepper Pimento Sandwich w/ Spicy Filet,620,33,56,31,237g,237,1950,2,16,9,0,95,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Entrées,Honey Pepper Pimento Sandwich w/ Grilled Filet,450,30,42,20,201g,201,940,1,15,7,0,100,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Salads,Cobb Salad,830,42,31,60,411g,411,2220,5,8,13,0,230,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Salads,Spicy Southwest Salad,680,33,27,49,424g,424,1570,7,7,10,0,100,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Salads,Market Salad,550,28,42,31,326g,326,1010,5,26,6,0,80,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Sides,Kale Crunch Side,170,4,13,12,112g,112,250,4,8,1.5,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Sides,Chick-fil-A Waffle Potato Fries®,420,5,45,24,125g,125,240,5,1,4,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Sides,Berry Parfait,270,13,35,9,206g,206,85,1,26,3.5,0,20,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Sides,Fruit Cup,70,1,16,0,125g,125,0,2,12,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Sides,Mac & Cheese,450,20,28,29,227g,227,1190,3,3,16,0,70,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Sides,Chicken Noodle Soup,190,11,27,4.5,252g,252,1290,2,2,1,0,30,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Sides,Side Salad,470,6,14,42,166g,166,700,4,5,8,0,35,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Sides,Chicken Tortilla Soup,280,24,31,7,265g,265,1060,17,4,2.5,0,50,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Sides,Original Flavor Waffle Potato Chips,220,3,25,13,43g,43,250,2,0,3.5,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Sides,Buddy Fruits® Apple Sauce,45,0,12,0,90g,90,0,1,8,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Sides,Chick-fil-A® Sauce Flavored Waffle Potato Chips,210,3,26,12,43g,43,330,2,3,3,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Kid's Meals,5 Ct Nuggets Kid's Meal,160,17,7,7,71g,71,760,0,1,1.5,0,50,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Kid's Meals,2 Ct Chick-n-Strips® Kid's Meal,200,19,11,9,91g,91,580,0,1,2,0,50,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Kid's Meals,5 Ct Grilled Nuggets Kid's Meal,80,16,1,2,59g,59,270,0,0,0,0,55,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Kid's Meals,Mac & Cheese Kid’s Meal,450,20,28,29,227g,227,1190,3,3,16,0,70,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Treats,Pineapple Dragonfruit Frosted Lemonade,360,7,70,7,375g,375,150,0,63,4.5,0,25,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Treats,Chocolate Fudge Brownie,370,4,47,21,85g,85,140,2,35,8,0,65,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Treats,Frosted Lemonade,350,7,67,7,383g,383,135,0,65,4.5,0,25,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Treats,Frosted Coffee,260,7,45,7,374g,374,140,0,44,4.5,0,25,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Treats,Chocolate Chunk Cookie,370,5,49,17,78g,78,230,3,26,9,0,15,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Treats,Peach Milkshake,600,11,101,18,412g,412,360,1,98,11,0.5,70,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Treats,Cookies & Cream Milkshake,630,13,91,25,409g,409,430,1,84,15,1,85,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Treats,Chocolate Milkshake,600,12,93,22,409g,409,350,1,90,14,1,85,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Treats,Strawberry Milkshake,560,10,92,18,409g,409,370,1,87,11,0.5,70,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Treats,Vanilla Milkshake,580,13,82,23,409g,409,390,1,80,15,1,90,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Treats,Chick-fil-A® Icedream® Cone,180,4,32,4,135g,135,90,0,25,2.5,0,15,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Treats,Chick-fil-A® Icedream® Cup,140,4,24,3.5,122g,122,75,0,24,2.5,0,15,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Treats,Dr Pepper® Float,320,7,60,7,369g,369,150,0,59,4.5,0,25,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,Freshly-Brewed Sweetened Iced Tea,120,0,31,0,604g,604,0,0,30,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,Freshly-Brewed Unsweetened Iced Tea,0,0,0,0,604g,604,0,0,0,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,Chick-fil-A® Lemonade,260,0,66,0,612g,612,0,0,60,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,Chick-fil-A® Diet Lemonade,60,0,15,0,612g,612,10,0,11,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,"Sunjoy® (1/2 Sweet Tea, 1/2 Lemonade)",240,0,60,0,641g,641,0,0,57,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,"Sunjoy® (1/2 Sweet Tea, 1/2 Diet Lemonade)",110,0,29,0,641g,641,5,0,26,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,"Sunjoy® (1/2 Unsweet Tea, 1/2 Lemonade)",160,0,41,0,641g,641,0,0,38,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,"Sunjoy® (1/2 Unsweet Tea, 1/2 Diet Lemonade)",35,0,10,0,641g,641,5,0,7,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,Iced Coffee,200,7,34,4,661g,661,115,0,34,3,0,15,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,Coca-Cola®,170,0,46,0,584g,584,45,0,46,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,Dr Pepper®,170,0,44,0,584g,584,50,0,44,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,Red Flash,180,0,48,0,584g,584,45,0,48,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,Hot Coffee,0,0,0,0,340g,340,10,0,0,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,Gallon Beverages,190,0,49,0,340g,340,0,0,45,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,Seasonal Gallon Beverages,210,0,53,0,340g,340,10,0,44,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,Ice Products,0,0,0,0,0g,0,0,0,0,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,"Pineapple Dragonfruit Sunjoy® (Sweet Tea, Lemonade)",240,0,59,0,662g,662,15,0,50,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,"Pineapple Dragonfruit Sunjoy® (Sweet Tea, Diet Lemonade)",140,0,34,0,662g,662,20,0,25,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,"Pineapple Dragonfruit Sunjoy® (Unsweet Tea, Lemonade)",160,0,39,0,662g,662,15,0,30,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,"Pineapple Dragonfruit Sunjoy® (Unsweet Tea, Diet Lemonade)",60,0,14,0,662g,662,20,0,6,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,Pineapple Dragonfruit Sweet Tea,150,0,37,0,662g,662,15,0,31,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,Pineapple Dragonfruit Unsweet Tea,35,0,7,0,662g,662,15,0,0,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,Pineapple Dragonfruit Lemonade,290,0,72,0,691g,691,15,0,60,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,Pineapple Dragonfruit Diet Lemonade,90,0,21,0,662g,662,25,0,10,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,DASANI® Bottled Water,0,0,0,0,479g,479,0,0,0,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,Honest Kids® Apple Juice,35,0,9,0,170g,170,15,0,8,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,Simply Orange®,160,2,34,0,326g,326,10,0,30,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,1% Chocolate Milk,140,7,23,2,198g,198,160,0,21,1.5,0,10,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,1% Milk,90,7,10,2,213g,213,105,0,10,1.5,0,10,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Drinks,Pineapple Dragonfruit & Sprite®,190,0,50,0,662g,662,100,0,43,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Dipping Sauces,Barbeque Sauce,45,0,11,0,28g,28,200,0,9,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Dipping Sauces,Chick-fil-A® Sauce,140,0,6,13,28g,28,170,0,6,2,0,10,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Dipping Sauces,Garden Herb Ranch Sauce,100,0,1,11,21g,21,170,0,0,2,0,10,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Dipping Sauces,Honey Mustard Sauce,50,0,11,0,28g,28,160,0,10,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Dipping Sauces,Polynesian Sauce,110,0,14,6,28g,28,210,0,13,1,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Dipping Sauces,Sweet & Spicy Sriracha Sauce,45,0,11,0,28g,28,380,0,10,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Dipping Sauces,Zesty Buffalo Sauce,25,0,1,2.5,21g,21,570,0,0,0,0,5,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Dipping Sauces,Honey Roasted BBQ Sauce,60,0,3,5,12g,12,75,0,2,1,0,5,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Dressings,Avocado Lime Ranch Dressing,310,1,3,32,57g,57,520,1,2,5,0,25,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Dressings,Creamy Salsa Dressing,290,1,2,31,57g,57,630,0,1,5,0,25,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Dressings,Fat-Free Honey Mustard Dressing,90,0,22,0,57g,57,330,1,18,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Dressings,Garden Herb Ranch Dressing,280,1,2,29,57g,57,440,0,1,5,0,25,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Dressings,Light Balsamic Vinaigrette Dressing,80,0,10,4,57g,57,360,0,9,0.5,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Dressings,Light Italian Dressing,25,0,3,1,57g,57,470,0,2,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Dressings,Zesty Apple Cider Vinaigrette Dressing,230,0,16,19,56g,56,450,0,14,3,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Buns,Gluten Free Bun,180,3,37,3.5,79g,79,400,2,7,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Buns,Buttery White Bun,180,5,29,6,60g,60,240,1,4,1,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Buns,Multigrain Brioche Bun,210,7,38,4.5,71g,71,310,3,7,1,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Buns,White Bun (Unbuttered),150,5,28,1,54g,54,240,1,4,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Proteins,Grilled Breakfast Filet,60,13,0,1,50g,50,420,0,0,0,0,40,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Proteins,Chick-fil-A® Breakfast Filet,160,15,8,8,71g,71,750,0,2,1.5,0,45,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Proteins,Spicy Breakfast Filet,150,15,7,7,71g,71,810,1,1,1.5,0,40,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Proteins,Grilled Filet,110,21,1,2,84g,84,370,0,1,0,0,70,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Proteins,Spicy Filet,280,23,16,13,120g,120,1390,1,2,2.5,0,65,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Proteins,Chick-fil-A® Filet,250,24,12,12,115g,115,1120,0,1,2.5,0,70,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Proteins,Bacon,50,4,0,3.5,10g,10,210,0,0,1.5,0,10,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Proteins,Sausage,240,11,1,22,57g,57,430,0,0,8,0,35,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Salad Toppings,Roasted Nut Blend,70,1,2,6,10g,10,0,1,1,0.5,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Salad Toppings,Harvest Nut Granola,70,1,10,2,14g,14,35,0,4,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Salad Toppings,Seasoned Tortilla Strips,70,1,8,4,14g,14,55,1,0,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Salad Toppings,Blue Cheese Crumbles,30,2,0,2.5,9g,9,110,0,0,1.5,0,10,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Salad Toppings,Crispy Bell Peppers,80,1,6,6,14g,14,75,0,0,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Salad Toppings,Chili Lime Pepitas,80,4,2,7,14g,14,50,1,0,1,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Sandwich Toppings,American Cheese,50,3,1,4.5,14g,14,230,0,0,2.5,0,15,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Sandwich Toppings,Colby Jack Cheese,80,5,0,7,21g,21,140,0,0,4,0,20,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Sandwich Toppings,Pepper Jack Cheese,80,4,0,6,21g,21,140,0,0,4,0,20,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Sandwich Toppings,Bacon,50,4,0,3.5,10g,10,210,0,0,1.5,0,10,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Sandwich Toppings,Tomato,5,0,1,0,30g,30,0,0,1,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Sandwich Toppings,Lettuce,5,0,1,0,20g,20,5,0,0,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Soup Toppings,Saltines,50,1,9,1,12g,12,180,0,0,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Trays,Grilled Chicken Bundle,460,37,35,19,224g,224,1030,3,8,8,0,105,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Trays,Chick-fil-A Nugget Trays,30,3,1,1.5,14g,14,150,0,0,0,0,10,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Trays,Chilled Chick-fil-A® Nugget Trays,30,3,1,1.5,14g,14,150,0,0,0,0,10,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Trays,Chick-n-Strips™ Trays,110,10,6,5,47g,47,300,0,1,1,0,25,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Trays,Chilled Chick-n-Strips® Trays,110,10,6,5,47g,47,300,0,1,1,0,25,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Trays,Chilled Grilled Chicken Sub Sandwich Tray,220,18,25,6,115g,115,490,2,4,2.5,0,45,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Trays,Spicy Chilled Grilled Chicken Sub Sandwich Tray,220,16,25,6,115g,115,660,2,5,2.5,0,40,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Trays,Chick-fil-A® Cool Wrap Trays,480,22,18,39,116g,116,970,7,3,7,0,70,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Trays,Southwest Veggie Wrap Trays,460,14,19,39,128g,128,940,8,3,8,0,35,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Trays,Spicy Cool Wrap® Trays,480,21,18,39,116g,116,1150,8,4,7,0,65,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Trays,Fruit Tray,780,8,182,0,1446g,1446,0,29,134,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Trays,Mac & Cheese Tray,4930,221,308,312,2482g,2482,13030,31,36,178,3.5,750,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Trays,Garden Salad Tray,310,19,20,18,595g,595,420,9,11,11,0.5,55,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Trays,Kale Crunch Side Tray,1160,30,77,87,610g,610,1420,23,42,9,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Trays,Chocolate Chunk Cookie Tray,370,5,49,17,78g,78,230,3,26,9,0,15,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Trays,Chocolate Fudge Brownie Tray,190,2,23,10,43g,43,70,1,18,4,0,35,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Trays,Cookie & Brownie Tray,280,3,36,14,60g,60,150,2,22,7,0,25,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Entrées,Chick-fil-A® Nuggets,250,27,11,11,113g,113,1210,0,1,2.5,0,85,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Entrées,Spicy Chicken Sandwich,450,28,45,19,188g,188,1730,1,6,4,0,65,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Entrées,Chilled Grilled Chicken Sub Sandwich,500,36,52,17,230g,230,1055,5,11,6,0,95,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Entrées,Spicy Chilled Grilled Chicken Sub Sandwich,500,34,53,17,230g,230,1405,5,11,6,0,90,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Entrées,Chick-fil-A® Chicken Sandwich,420,29,41,18,183g,183,1460,1,6,3.5,0,70,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,Seasonal Gallon Beverages,210,0,53,0,340g,340,10,0,44,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,Bottled Sweet Tea,190,0,50,0,506g,506,0,0,49,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,Bottled Unsweet Tea,0,0,0,0,486g,486,0,0,0,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,Bottled Lemonade,280,0,73,0,520g,520,10,0,69,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,Bottled Diet Lemonade,60,0,17,0,492g,492,10,0,12,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,Ice Scoop,0,0,0,0,0g,0,0,0,0,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,Ice Bucket and Scoop,0,0,0,0,0g,0,0,0,0,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,Catering Coffee,0,0,0,0,2722g,2722,80,0,0,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,DASANI® Bottled Water,0,0,0,0,479g,479,0,0,0,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,Honest Kids® Apple Juice,35,0,9,0,170g,170,15,0,8,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,Simply Orange®,160,2,34,0,326g,326,10,0,30,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,1% Chocolate Milk,140,7,23,2,198g,198,160,0,21,1.5,0,10,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,1% Milk,90,7,10,2,213g,213,105,0,10,1.5,0,10,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,Gallon Chick-fil-A® Lemonade,190,0,49,0,340g,340,0,0,45,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,Gallon Chick-fil-A® Diet Lemonade,40,0,12,0,340g,340,10,0,8,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,"Gallon Chick-fil-A® Lemonade (1/2 Lemonade, 1/2 Diet Lemonade)",120,0,33,0,340g,340,0,0,30,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,Gallon Freshly-Brewed Iced Tea Sweetened,130,0,33,0,340g,340,0,0,33,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,Gallon Freshly-Brewed Iced Tea Unsweetened,0,0,0,0,340g,340,0,0,0,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,"Gallon Chick-fil-A® Iced Tea (1/2 Sweet Tea, 1/2 Unsweet Tea)",70,0,18,0,340g,340,0,0,18,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,"Gallon Sunjoy® (1/2 Sweet Tea, 1/2 Lemonade)",160,0,41,0,340g,340,0,0,39,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,"Gallon Sunjoy® (1/2 Sweet Tea, 1/2 Diet Lemonade)",90,0,23,0,340g,340,0,0,21,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,"Gallon Sunjoy® (1/2 Unsweet Tea, 1/2 Lemonade)",100,0,26,0,340g,340,0,0,24,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,"Gallon Sunjoy® (1/2 Unsweet Tea, 1/2 Diet Lemonade)",20,0,6,0,340g,340,0,0,4,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.
+Chick-fil-A,Catering Drinks,Bag of Ice,0,0,0,0,28g,28,0,0,0,0,0,0,FALSE,Converted from user-provided Chick-fil-A nutrition text including sugar and protein columns.

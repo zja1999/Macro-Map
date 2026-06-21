@@ -1,0 +1,4 @@
+chain,category,item_name,serving_size,calories,protein_g,carbs_g,fat_g,sodium_mg,fiber_g,sugar_g,is_sample_data
+Chipotle,Test Data,Sample Chicken Bowl,1 bowl,650,45,68,22,1450,13,5,TRUE
+Chipotle,Test Data,Sample Steak Burrito,1 burrito,850,47,96,32,1980,12,6,TRUE
+Chipotle,Test Data,Sample Veggie Bowl,1 bowl,620,22,88,20,1360,18,8,TRUE

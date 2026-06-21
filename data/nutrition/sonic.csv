@@ -1,0 +1,4 @@
+chain,category,item_name,serving_size,calories,protein_g,carbs_g,fat_g,sodium_mg,fiber_g,sugar_g,is_sample_data
+Sonic,Test Data,Sample Cheeseburger,1 item,690,35,53,39,1350,3,9,TRUE
+Sonic,Test Data,Sample Grilled Chicken Sandwich,1 item,470,32,43,18,1240,3,7,TRUE
+Sonic,Test Data,Sample Tots,medium,360,4,43,20,840,4,0,TRUE

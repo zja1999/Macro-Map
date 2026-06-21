@@ -1,0 +1,4 @@
+chain,category,item_name,serving_size,calories,protein_g,carbs_g,fat_g,sodium_mg,fiber_g,sugar_g,is_sample_data
+Subway,Test Data,Sample Turkey Sub,6 inch,300,19,46,5,780,5,7,TRUE
+Subway,Test Data,Sample Chicken Teriyaki Sub,6 inch,370,25,59,5,970,5,16,TRUE
+Subway,Test Data,Sample Tuna Sub,6 inch,430,20,44,25,730,5,5,TRUE

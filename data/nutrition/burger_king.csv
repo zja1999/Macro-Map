@@ -1,0 +1,4 @@
+chain,category,item_name,serving_size,calories,protein_g,carbs_g,fat_g,sodium_mg,fiber_g,sugar_g,is_sample_data
+Burger King,Test Data,Sample Burger,1 item,670,31,54,40,1170,3,11,TRUE
+Burger King,Test Data,Sample Chicken Sandwich,1 item,660,28,49,40,1170,2,7,TRUE
+Burger King,Test Data,Sample Fries,medium,380,4,52,17,570,5,0,TRUE

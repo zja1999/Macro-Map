@@ -1,0 +1,4 @@
+chain,category,item_name,serving_size,calories,protein_g,carbs_g,fat_g,sodium_mg,fiber_g,sugar_g,is_sample_data
+Whataburger,Test Data,Sample Burger,1 item,590,29,62,26,1220,3,11,TRUE
+Whataburger,Test Data,Sample Grilled Chicken Sandwich,1 item,430,32,43,14,1030,3,7,TRUE
+Whataburger,Test Data,Sample Fries,medium,420,5,52,21,370,5,0,TRUE

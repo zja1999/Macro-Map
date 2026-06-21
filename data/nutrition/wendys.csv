@@ -1,0 +1,4 @@
+chain,category,item_name,serving_size,calories,protein_g,carbs_g,fat_g,sodium_mg,fiber_g,sugar_g,is_sample_data
+Wendy's,Test Data,Sample Cheeseburger,1 item,360,19,32,18,850,2,7,TRUE
+Wendy's,Test Data,Sample Chicken Sandwich,1 item,490,28,49,21,1250,2,6,TRUE
+Wendy's,Test Data,Sample Chili,small,240,16,22,11,910,6,9,TRUE
