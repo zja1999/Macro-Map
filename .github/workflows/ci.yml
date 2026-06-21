@@ -9,4 +9,5 @@ jobs:
         with:
           python-version: "3.11"
       - run: python -m pip install --upgrade pip
-      - run: python --version
+      - run: python -m pip install pytest pandas
+      - run: python -m pytest tests/test_chain_normalizer.py tests/test_nutrition_store.py tests/test_recommender.py -q
