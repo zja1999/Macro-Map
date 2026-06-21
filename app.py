@@ -1,4 +1,4 @@
-from src.app_main_tabs import main
+from src.app_main_compact import main
 
 
 if __name__ == "__main__":
