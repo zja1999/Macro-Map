@@ -27,6 +27,112 @@ st.set_page_config(page_title="Macro Map", layout="wide")
 DEFAULT_CENTER = (31.0000, -99.0000)  # Texas-wide starting view.
 DEFAULT_ZOOM = 6
 MAX_QUERY_AREA_SQ_MI = 250.0
+MAP_HEIGHT_PX = 620
+
+
+def inject_responsive_styles() -> None:
+    """Keep the app in a desktop-style two-column layout on mobile screens."""
+    st.markdown(
+        """
+        <style>
+            .block-container {
+                max-width: 1500px;
+                padding-top: 1.1rem;
+                padding-bottom: 2rem;
+            }
+
+            h1 {
+                margin-bottom: 0.15rem;
+            }
+
+            div[data-testid="stMetric"] {
+                background: transparent;
+                border: 1px solid rgba(49, 51, 63, 0.18);
+                border-radius: 0.65rem;
+                padding: 0.55rem 0.7rem;
+            }
+
+            div[data-testid="stDataFrame"] {
+                width: 100%;
+            }
+
+            div[data-testid="stButton"] > button,
+            div[data-testid="stDownloadButton"] > button {
+                width: 100%;
+            }
+
+            /*
+               Phone layout: keep the desktop-style map/results columns side-by-side
+               instead of allowing Streamlit to stack them. Very narrow phones get a
+               horizontal page scroll, which preserves the desktop layout instead of
+               making the map dominate the whole screen.
+            */
+            @media (max-width: 768px) {
+                .stApp {
+                    overflow-x: auto;
+                }
+
+                .block-container {
+                    min-width: 760px;
+                    max-width: 760px;
+                    padding-left: 0.65rem;
+                    padding-right: 0.65rem;
+                    padding-top: 0.6rem;
+                }
+
+                h1 {
+                    font-size: 1.95rem !important;
+                    line-height: 1.15 !important;
+                }
+
+                h2, h3 {
+                    font-size: 1.15rem !important;
+                    line-height: 1.25 !important;
+                }
+
+                p, .stCaption, div[data-testid="stMarkdownContainer"] {
+                    font-size: 0.9rem;
+                }
+
+                div[data-testid="stHorizontalBlock"] {
+                    flex-direction: row !important;
+                    flex-wrap: nowrap !important;
+                    align-items: flex-start !important;
+                    gap: 1rem !important;
+                }
+
+                div[data-testid="column"] {
+                    min-width: 0 !important;
+                }
+
+                iframe[title="streamlit_folium.st_folium"] {
+                    height: 380px !important;
+                    min-height: 380px !important;
+                    border-radius: 0.6rem;
+                }
+
+                .leaflet-control-container .leaflet-top.leaflet-right {
+                    top: 0.35rem;
+                    right: 0.35rem;
+                }
+
+                .leaflet-draw-toolbar a {
+                    width: 32px !important;
+                    height: 32px !important;
+                    line-height: 32px !important;
+                }
+            }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def dataframe_height(row_count: int, *, min_height: int = 180, max_height: int = 420) -> int:
+    """Return a reasonable dataframe height so tables do not dominate mobile screens."""
+    if row_count <= 0:
+        return min_height
+    return max(min_height, min(max_height, 38 + row_count * 35))
 
 
 @st.cache_data(ttl=60 * 60, show_spinner=False)
@@ -88,7 +194,7 @@ def render_map_chain_finder() -> None:
 
     library = load_nutrition_library()
 
-    left, right = st.columns([2, 1], gap="large")
+    left, right = st.columns([1.8, 1], gap="large")
 
     if "locations" not in st.session_state:
         st.session_state.locations = pd.DataFrame()
@@ -99,7 +205,7 @@ def render_map_chain_finder() -> None:
         m = build_map(locations=st.session_state.locations)
         map_data = st_folium(
             m,
-            height=650,
+            height=MAP_HEIGHT_PX,
             use_container_width=True,
             returned_objects=["all_drawings", "last_active_drawing"],
         )
@@ -172,6 +278,7 @@ def render_map_chain_finder() -> None:
                 style_chain_table(display_chains),
                 use_container_width=True,
                 hide_index=True,
+                height=dataframe_height(len(display_chains), min_height=160, max_height=330),
                 column_config={
                     "chain": "Chain",
                     "locations": "# Locations",
@@ -201,7 +308,12 @@ def render_map_chain_finder() -> None:
                 "osm_id",
             ]
             present_cols = [col for col in display_cols if col in st.session_state.locations.columns]
-            st.dataframe(st.session_state.locations[present_cols], use_container_width=True, hide_index=True)
+            st.dataframe(
+                st.session_state.locations[present_cols],
+                use_container_width=True,
+                hide_index=True,
+                height=dataframe_height(len(st.session_state.locations), min_height=220, max_height=520),
+            )
             st.download_button(
                 "Download location details CSV",
                 data=st.session_state.locations.to_csv(index=False).encode("utf-8"),
@@ -254,6 +366,7 @@ def render_map_chain_finder() -> None:
                     menu_items[present_cols + extra_cols],
                     use_container_width=True,
                     hide_index=True,
+                    height=dataframe_height(len(menu_items), min_height=240, max_height=560),
                 )
                 st.download_button(
                     "Download selected menu macros CSV",
@@ -264,6 +377,7 @@ def render_map_chain_finder() -> None:
 
 
 def main() -> None:
+    inject_responsive_styles()
     st.title("Macro Map")
     render_map_chain_finder()
 
