@@ -13,26 +13,39 @@ The app is currently optimized for Texas-area testing, but most of the code is w
    - Filter the results back to your drawn shape.
    - Show a unique list of chains and location counts.
    - Color-code each chain name with red/green text by whether nutrition data is on file.
+   - Store-level location tables and map markers are intentionally hidden to reduce clutter.
 
-2. **Nutrition file library**
+2. **Selected-chain menu tabs**
+   - After a selection, the selected-chain area uses three tabs:
+     - **Menu items**: the main table of menu macros for chains found in the selected area.
+     - **Item suggestions**: single-item recommendations by protein goal and calorie limit.
+     - **Macro counter**: a prototype daily calorie/macro tracker.
+
+3. **Nutrition file library**
    - Put one real CSV per chain in `data/nutrition/`.
    - The app loads real CSVs in that folder for matching/coverage, but the macro table stays hidden until you draw/search an area.
-   - After a selection, **Menu macros for selected area** shows only rows for chains found in that area.
+   - After a selection, **Menu items** shows only rows for chains found in that area.
    - Template/example files are ignored:
      - files starting with `_` or `.`
      - files ending in `.example.csv` or `.template.csv`
 
-3. **Single item recommendations**
+4. **Single item recommendations**
    - After selecting an area with matching nutrition data, the app can rank individual menu items by protein goal and calorie limit.
    - The recommender intentionally avoids combo-building; it only recommends single menu items.
 
-4. **Missing nutrition requests**
+5. **Macro counter prototype**
+   - Users can check menu items from the selected-chain results and add them to a running macro counter.
+   - The counter tracks calories, protein, carbs, fat, sodium, fiber, and sugar.
+   - Users can set an in-session profile name and macro targets.
+   - Users can download/upload a JSON profile/day file as a temporary persistence workaround.
+
+6. **Missing nutrition requests**
    - Missing chains show a request link in the unique-chain table.
    - The **Request missing nutrition data** panel lets a user pick a missing chain and open a pre-filled GitHub issue.
    - Users without GitHub can copy a prepared request message.
    - Optional email requests can be enabled with Streamlit secrets or an environment variable.
 
-5. **Nutrition Parser**
+7. **Nutrition Parser**
    - Upload a `.pdf` or `.txt` nutrition file.
    - Extract text from text-based PDFs with `pdfplumber`.
    - Parse nutrition rows into a stable CSV schema:
@@ -96,6 +109,29 @@ streamlit run app.py
 ```
 
 On Streamlit Community Cloud, add `contact_email` in the app's Secrets settings.
+
+## User profiles and persistence
+
+The current macro counter stores profile data in Streamlit session state. That means it works during the current browser session, but it is not a true account system.
+
+The temporary workaround is the **Download profile/day JSON** and **Load profile/day JSON** flow in the Macro counter tab.
+
+For real user profiles where someone can come back later and see calories/macros remaining, the app needs a persistent backend. Good future options:
+
+1. **Supabase or hosted Postgres**
+   - Best fit for real user accounts and macro logs.
+   - Store database credentials in Streamlit secrets, not GitHub.
+
+2. **Firebase**
+   - Good if you want user auth plus a document-style database.
+
+3. **Google Sheets or Airtable**
+   - Easier to prototype, less ideal for private user health data.
+
+4. **Local SQLite**
+   - Fine for local testing, but not reliable for Streamlit Community Cloud persistence.
+
+Do not use GitHub as the user-data backend. GitHub should store code and nutrition CSVs, not private user macro logs.
 
 ## Adding nutrition data manually
 
@@ -209,8 +245,10 @@ menu_macro_map/
     parse_nutrition.py
   src/
     app_main.py
+    app_main_tabs.py
     chain_normalizer.py
     geojson_utils.py
+    macro_counter.py
     nutrition_parser.py
     nutrition_store.py
     osm_overpass.py
