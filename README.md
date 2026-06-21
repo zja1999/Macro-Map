@@ -190,7 +190,7 @@ Current tests cover:
 - nutrition CSV loading/filtering
 - single-item recommendation ranking
 
-A GitHub Actions workflow also runs the test suite on pushes to `main`.
+A GitHub Actions workflow also runs the focused test suite on pushes.
 
 ## Project structure
 
