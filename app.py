@@ -14,13 +14,11 @@ from src.geojson_utils import (
     polygon_latlon_from_feature,
     rough_bbox_area_sq_miles,
 )
-from src.nutrition_parser import extract_text_from_pdf, parse_nutrition_text
 from src.nutrition_store import (
     annotate_chains_with_nutrition,
     filter_files_for_chains,
     filter_items_for_chains,
     load_nutrition_library,
-    nutrition_dir,
 )
 from src.osm_overpass import build_fast_food_bbox_query, parse_fast_food_elements, query_overpass, unique_chains
 
@@ -90,20 +88,6 @@ def render_map_chain_finder() -> None:
 
     library = load_nutrition_library()
 
-    with st.sidebar:
-        st.header("Project data")
-        st.write("Nutrition CSV files go here:")
-        st.code(str(nutrition_dir()), language="text")
-        st.caption("Use one real CSV per chain, for example `chick_fil_a.csv`. Filenames and chain names are normalized, so this matches `Chick-fil-A`.")
-        st.divider()
-        st.write("Tips")
-        st.write("Draw a rectangle for the fastest query. Polygons work too.")
-        st.write(f"Keep the selected area under about {MAX_QUERY_AREA_SQ_MI:.0f} sq mi for this public-API prototype.")
-        if st.button("Clear results"):
-            st.session_state.locations = pd.DataFrame()
-            st.session_state.chains = pd.DataFrame()
-            st.rerun()
-
     left, right = st.columns([2, 1], gap="large")
 
     if "locations" not in st.session_state:
@@ -122,6 +106,11 @@ def render_map_chain_finder() -> None:
 
     with right:
         st.subheader("Selection")
+        if st.button("Clear results"):
+            st.session_state.locations = pd.DataFrame()
+            st.session_state.chains = pd.DataFrame()
+            st.rerun()
+        st.caption(f"Draw a rectangle or polygon under about {MAX_QUERY_AREA_SQ_MI:.0f} sq mi, then search.")
         latest_feature = get_latest_drawn_feature(map_data)
 
         if latest_feature is None:
@@ -274,120 +263,9 @@ def render_map_chain_finder() -> None:
                 )
 
 
-def render_nutrition_parser() -> None:
-    st.caption(
-        "Upload a nutrition PDF or copied text file. The parser creates a reviewable CSV with stable macro columns."
-    )
-
-    st.warning(
-        "This is a best-effort parser, not a guaranteed universal parser. Restaurant PDFs vary a lot, "
-        "so rows marked `needs_review` should be checked before you treat them as final data."
-    )
-
-    col_a, col_b, col_c = st.columns([1, 1, 1])
-    with col_a:
-        chain = st.text_input("Chain name", value="Chick-fil-A")
-    with col_b:
-        expected_choice = st.selectbox(
-            "Expected nutrient values after serving size",
-            options=["auto", "9", "10"],
-            help="Use 9 for calories/fat/sat/trans/cholesterol/sodium/carbs/fiber/sugar. Use 10 if protein is included too.",
-        )
-    with col_c:
-        exclude_common = st.checkbox("Exclude drinks/treats/catering", value=False)
-
-    uploaded = st.file_uploader("Upload PDF or text file", type=["pdf", "txt"])
-
-    if not uploaded:
-        st.info("Upload a PDF or .txt file to test the parser.")
-        st.code(
-            "python scripts/parse_nutrition.py nutrition.pdf --chain \"Chick-fil-A\" --output data/chick_fil_a_nutrition.csv",
-            language="bash",
-        )
-        return
-
-    expected_nutrients: str | int = expected_choice
-    if expected_choice != "auto":
-        expected_nutrients = int(expected_choice)
-
-    try:
-        if uploaded.name.lower().endswith(".pdf"):
-            text = extract_text_from_pdf(uploaded.getvalue())
-        else:
-            text = uploaded.getvalue().decode("utf-8", errors="ignore")
-
-        exclude_categories = None
-        if exclude_common:
-            exclude_categories = [
-                "Drinks",
-                "Treats",
-                "Dipping Sauces",
-                "Dressings",
-                "Buns",
-                "Proteins",
-                "Salad Toppings",
-                "Sandwich Toppings",
-                "Soup Toppings",
-                "Trays",
-                "Catering",
-                "Catering Entrées",
-                "Catering Drinks",
-            ]
-
-        df = parse_nutrition_text(
-            text,
-            chain=chain.strip() or "Unknown Chain",
-            expected_nutrients=expected_nutrients,
-            exclude_categories=exclude_categories,
-        )
-    except Exception as exc:
-        st.error("Could not parse that file.")
-        with st.expander("Technical details"):
-            st.code(str(exc))
-        return
-
-    if df.empty:
-        st.error("No nutrition rows were detected. If this is a scanned PDF, it may need OCR first.")
-        with st.expander("Extracted text preview"):
-            st.text(text[:5000])
-        return
-
-    review_count = int(df["needs_review"].sum())
-    st.metric("Rows parsed", len(df))
-    st.metric("Rows needing review", review_count)
-
-    important_cols = [
-        "chain",
-        "category",
-        "item_name",
-        "calories",
-        "protein_g",
-        "carbs_g",
-        "fat_g",
-        "serving_size",
-        "needs_review",
-        "review_reason",
-    ]
-    st.dataframe(df[important_cols], use_container_width=True, hide_index=True)
-
-    st.download_button(
-        "Download parsed nutrition CSV",
-        data=df.to_csv(index=False).encode("utf-8"),
-        file_name=f"{chain.lower().replace(' ', '_').replace('-', '_')}_nutrition_parsed.csv",
-        mime="text/csv",
-    )
-
-    with st.expander("Raw extracted text preview"):
-        st.text(text[:8000])
-
-
 def main() -> None:
     st.title("Macro Map")
-    map_tab, parser_tab = st.tabs(["Map Chain Finder", "Nutrition Parser"])
-    with map_tab:
-        render_map_chain_finder()
-    with parser_tab:
-        render_nutrition_parser()
+    render_map_chain_finder()
 
 
 if __name__ == "__main__":
