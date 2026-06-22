@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import html
-
 import folium
 import pandas as pd
 import streamlit as st
@@ -26,10 +24,10 @@ from src.nutrition_store import (
 from src.osm_overpass import build_fast_food_bbox_query, parse_fast_food_elements, query_overpass, unique_chains
 from src.recommender import recommend_single_items
 from src.ui_helpers import (
-    configured_contact_email,
     dataframe_height,
     inject_responsive_styles,
     nutrition_request_mailto_url,
+    nutrition_request_message,
     nutrition_request_url,
 )
 
@@ -195,75 +193,102 @@ def render_selected_chain_tabs(library) -> None:
         render_macro_counter(menu_items)
 
 
-def _chain_cell(chain: str, nutrition_on_file: bool) -> str:
-    safe_chain = html.escape(str(chain))
-    if nutrition_on_file:
-        return f'<span class="macro-chain-on-file">{safe_chain}</span>'
-    request_url = html.escape(nutrition_request_url(str(chain)), quote=True)
-    return f'<a class="macro-chain-missing" href="{request_url}" target="_blank" rel="noopener noreferrer">{safe_chain}</a>'
+def selected_chain_from_table_event(table_event, annotated_chains: pd.DataFrame) -> pd.Series | None:
+    """Return the selected chain row from a Streamlit dataframe selection event."""
+    selection = getattr(table_event, "selection", None)
+    selected_rows: list[int] = []
+
+    if selection is not None:
+        if hasattr(selection, "rows"):
+            selected_rows = list(selection.rows)
+        elif isinstance(selection, dict):
+            selected_rows = list(selection.get("rows", []))
+
+    if not selected_rows:
+        return None
+
+    selected_index = int(selected_rows[0])
+    if selected_index < 0 or selected_index >= len(annotated_chains):
+        return None
+
+    return annotated_chains.iloc[selected_index]
 
 
-def _email_cell(chain: str, nutrition_on_file: bool, show_email_column: bool) -> str:
-    if not show_email_column:
-        return ""
-    if nutrition_on_file:
-        return "<td>—</td>"
-    email_url = nutrition_request_mailto_url(str(chain))
-    if not email_url:
-        return "<td>—</td>"
-    safe_url = html.escape(email_url, quote=True)
-    return f'<td class="macro-chain-email"><a href="{safe_url}">Email draft</a></td>'
-
-
-def render_clickable_chain_table(annotated_chains: pd.DataFrame) -> None:
-    """Render chains as a compact clickable table.
-
-    Missing chains are clickable in the Chain column and open a pre-filled GitHub
-    issue. The email link is intentionally labeled as a draft because mailto
-    cannot send automatically from a Streamlit app.
-    """
-    show_email_column = bool(configured_contact_email())
-    email_header = "<th>Email</th>" if show_email_column else ""
-    rows: list[str] = []
-
-    for _, row in annotated_chains.iterrows():
-        chain = str(row["chain"])
-        locations = int(row.get("locations", 0) or 0)
-        nutrition_on_file = bool(row.get("nutrition_on_file", False))
-        nutrition_status = "On file" if nutrition_on_file else "Missing"
-        status_class = "macro-chain-on-file" if nutrition_on_file else "macro-chain-missing"
-        email_cell = _email_cell(chain, nutrition_on_file, show_email_column)
-        rows.append(
-            "<tr>"
-            f"<td>{_chain_cell(chain, nutrition_on_file)}</td>"
-            f"<td>{locations}</td>"
-            f'<td><span class="{status_class}">{nutrition_status}</span></td>'
-            f"{email_cell}"
-            "</tr>"
-        )
-
-    table_html = (
-        '<div class="macro-chain-table" style="max-height: 420px; overflow-y: auto;">'
-        "<table>"
-        f"<thead><tr><th>Chain</th><th># Locations</th><th>Nutrition</th>{email_header}</tr></thead>"
-        f"<tbody>{''.join(rows)}</tbody>"
-        "</table>"
-        "</div>"
+def render_selectable_chain_table(annotated_chains: pd.DataFrame) -> pd.Series | None:
+    """Render chains as a normal selectable table and return the active row."""
+    table = annotated_chains[["chain", "locations", "nutrition_status", "nutrition_on_file"]].copy()
+    table["request_note"] = table["nutrition_on_file"].map(
+        lambda nutrition_on_file: "Already on file" if bool(nutrition_on_file) else "Select this row to request"
     )
-    st.markdown(table_html, unsafe_allow_html=True)
+    table = table.rename(
+        columns={
+            "chain": "Chain",
+            "locations": "# Locations",
+            "nutrition_status": "Nutrition",
+            "request_note": "Request",
+        }
+    )
 
-    missing_count = int((~annotated_chains["nutrition_on_file"]).sum())
-    if missing_count:
-        if show_email_column:
-            st.caption("Click a red missing chain to open a GitHub request, or use Email draft. Email drafts still require the user to press Send.")
+    table_event = st.dataframe(
+        table[["Chain", "# Locations", "Nutrition", "Request"]],
+        width="stretch",
+        hide_index=True,
+        height=dataframe_height(len(table), min_height=220, max_height=420),
+        on_select="rerun",
+        selection_mode="single-row",
+        key="unique_chains_selectable_table",
+        column_config={
+            "Chain": "Chain",
+            "# Locations": "# Locations",
+            "Nutrition": "Nutrition",
+            "Request": "Request",
+        },
+    )
+
+    return selected_chain_from_table_event(table_event, annotated_chains)
+
+
+def render_chain_request_section(selected_chain: pd.Series | None, missing_chains: list[str]) -> None:
+    """Render the request section based on the currently selected table row."""
+    with st.expander("Request missing nutrition data", expanded=bool(missing_chains)):
+        if not missing_chains:
+            st.success("All chains in this selection have nutrition CSVs on file.")
+            return
+
+        if selected_chain is None:
+            st.info("Select a missing chain row in the table above to populate this request section.")
+            st.caption("Rows with nutrition already on file do not need a request.")
+            return
+
+        chain = str(selected_chain["chain"])
+        nutrition_on_file = bool(selected_chain.get("nutrition_on_file", False))
+
+        st.caption(f"Selected chain: **{chain}**")
+        if nutrition_on_file:
+            st.success("Nutrition data is already on file for this chain.")
+            return
+
+        request_message = nutrition_request_message(chain)
+        github_col, email_col = st.columns(2)
+        github_col.link_button("Open GitHub request", nutrition_request_url(chain), width="stretch")
+
+        email_url = nutrition_request_mailto_url(chain)
+        if email_url:
+            email_col.link_button("Open email draft", email_url, width="stretch")
+            st.caption("Email drafts still require the user to press Send. Streamlit cannot send mail by itself with `mailto:` links.")
         else:
-            st.caption("Click a red missing chain to open a pre-filled GitHub request. Email drafts can be enabled with `contact_email` in Streamlit secrets.")
-    else:
-        st.success("All chains in this selection have nutrition CSVs on file.")
+            email_col.caption("Email drafts can be enabled with `contact_email` in Streamlit secrets.")
+
+        st.text_area(
+            "Copyable request message",
+            request_message,
+            height=130,
+            help="Use this if the user does not have GitHub or email drafts are not configured.",
+        )
 
 
 def render_unique_chains_panel(library) -> None:
-    """Render unique chains with clickable request links for missing nutrition data."""
+    """Render unique chains and a request section driven by table selection."""
     st.subheader("Unique chains")
     chains = st.session_state.chains
     locations = st.session_state.locations
@@ -280,8 +305,9 @@ def render_unique_chains_panel(library) -> None:
     metric_b.metric("Locations found", len(locations))
     st.caption(f"Nutrition coverage: **{covered_count}/{len(annotated_chains)} chains** have CSVs on file.")
 
-    display_chains = annotated_chains[["chain", "locations", "nutrition_status", "nutrition_on_file", "chain_key"]].copy()
-    render_clickable_chain_table(display_chains)
+    selected_chain = render_selectable_chain_table(annotated_chains)
+    missing_chains = annotated_chains.loc[~annotated_chains["nutrition_on_file"], "chain"].tolist()
+    render_chain_request_section(selected_chain, missing_chains)
 
     st.download_button(
         "Download chain list CSV",
