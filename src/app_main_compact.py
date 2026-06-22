@@ -8,11 +8,11 @@ from streamlit_folium import st_folium
 
 from src.geojson_utils import (
     SelectionError,
-    bbox_from_latlon,
-    filter_locations_to_polygon,
+    bbox_from_circle,
+    circle_area_sq_miles,
+    circle_from_feature,
+    filter_locations_to_circle,
     get_latest_drawn_feature,
-    polygon_latlon_from_feature,
-    rough_bbox_area_sq_miles,
 )
 from src.macro_counter import render_macro_counter
 from src.nutrition_store import (
@@ -34,7 +34,8 @@ from src.ui_helpers import (
 DEFAULT_CENTER = (31.0000, -99.0000)  # Texas-wide starting view.
 DEFAULT_ZOOM = 6
 MAX_QUERY_AREA_SQ_MI = 250.0
-MAP_HEIGHT_PX = 620
+MAP_HEIGHT_PX = 650
+METERS_PER_MILE = 1609.344
 MENU_DISPLAY_COLUMNS = [
     "chain",
     "category",
@@ -63,18 +64,18 @@ def fetch_fast_food_locations_in_bbox(south: float, west: float, north: float, e
 
 
 def build_map(center: tuple[float, float] = DEFAULT_CENTER, zoom: int = DEFAULT_ZOOM) -> folium.Map:
-    """Build the selection map without store-level markers."""
+    """Build the selection map with circle selection only."""
     m = folium.Map(location=list(center), zoom_start=zoom, control_scale=True, zoom_control=False)
     Draw(
         export=False,
         position="topright",
         draw_options={
             "polyline": False,
-            "circle": False,
+            "rectangle": False,
+            "polygon": False,
+            "circle": {"showRadius": True, "metric": False},
             "circlemarker": False,
             "marker": False,
-            "polygon": {"allowIntersection": False, "showArea": True, "metric": False},
-            "rectangle": True,
         },
         edit_options={"edit": True, "remove": True},
     ).add_to(m)
@@ -338,45 +339,46 @@ def render_selection_panel(map_data) -> None:
         st.session_state.map_reset_token += 1
         st.rerun()
 
-    st.caption(f"Draw a rectangle or polygon under about {MAX_QUERY_AREA_SQ_MI:.0f} sq mi, then search.")
+    st.caption(f"Draw one circle under about {MAX_QUERY_AREA_SQ_MI:.0f} sq mi, then search.")
     latest_feature = get_latest_drawn_feature(map_data)
 
     if latest_feature is None:
         if find_clicked:
-            st.warning("Draw a rectangle or polygon on the map before searching.")
+            st.warning("Draw a circle on the map before searching.")
         else:
-            st.info("Draw a rectangle or polygon on the map to select an area.")
+            st.info("Click the circle tool, then drag on the map to set your search radius.")
         return
 
     try:
-        latlon = polygon_latlon_from_feature(latest_feature)
-        area_sq_miles = rough_bbox_area_sq_miles(latlon)
-        south, west, north, east = bbox_from_latlon(latlon)
-        st.write(f"Approx. selected bounding-box area: **{area_sq_miles:,.1f} sq mi**")
+        center_lat, center_lon, radius_m = circle_from_feature(latest_feature)
+        area_sq_miles = circle_area_sq_miles(radius_m)
+        radius_miles = radius_m / METERS_PER_MILE
+        south, west, north, east = bbox_from_circle(center_lat, center_lon, radius_m)
+        st.write(f"Selected circle: **{area_sq_miles:,.1f} sq mi** / **{radius_miles:,.1f} mi radius**")
 
         if area_sq_miles > MAX_QUERY_AREA_SQ_MI:
-            st.warning("That area is too large for the public Overpass API prototype. Zoom in and draw a smaller box, then search again.")
+            st.warning("That circle is too large for the public Overpass API prototype. Draw a smaller circle, then search again.")
         elif find_clicked:
             try:
                 with st.spinner("Searching OpenStreetMap..."):
                     bbox_locations = fetch_fast_food_locations_in_bbox(south, west, north, east)
-                    locations = filter_locations_to_polygon(bbox_locations, latlon)
+                    locations = filter_locations_to_circle(bbox_locations, center_lat, center_lon, radius_m)
                 st.session_state.locations = locations
                 st.session_state.chains = unique_chains(locations)
                 st.rerun()
             except RuntimeError as exc:
                 st.error("OpenStreetMap's public Overpass API rejected or timed out on this request.")
-                st.caption("Try a smaller rectangle first. This version catches the error instead of crashing. The technical details are below.")
+                st.caption("Try a smaller circle first. This version catches the error instead of crashing. The technical details are below.")
                 with st.expander("Technical details"):
                     st.code(str(exc))
         else:
-            st.info("Selection ready. Click **Find fast-food chains** to search this area.")
+            st.info("Circle ready. Click **Find fast-food chains** to search this area.")
     except SelectionError as exc:
         st.error(str(exc))
 
 
 def render_map_chain_finder() -> None:
-    st.caption("Draw an area on the Texas map, then list unique fast-food chains inside it.")
+    st.caption("Draw a circle on the map, then list unique fast-food chains inside it.")
     library = load_nutrition_library()
 
     if "locations" not in st.session_state:
@@ -386,7 +388,7 @@ def render_map_chain_finder() -> None:
     if "map_reset_token" not in st.session_state:
         st.session_state.map_reset_token = 0
 
-    map_col, selection_col, chains_col = st.columns([1.7, 0.9, 1.1], gap="large")
+    map_col, selection_col, chains_col = st.columns([1.8, 0.8, 1.05], gap="large")
 
     with map_col:
         map_data = st_folium(
