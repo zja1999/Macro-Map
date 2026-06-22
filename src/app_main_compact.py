@@ -37,7 +37,7 @@ from src.ui_helpers import (
 )
 
 DEFAULT_CENTER = (31.0000, -99.0000)  # Fallback if browser location is unavailable/denied.
-DEFAULT_ZOOM = 8
+DEFAULT_ZOOM = 10  # Roughly surrounding-neighborhood/city view instead of street-level zoom.
 MAX_QUERY_AREA_SQ_MI = 250.0
 MAP_HEIGHT_PX = 650
 METERS_PER_MILE = 1609.344
@@ -77,7 +77,7 @@ def _location_label(row: pd.Series) -> str:
 
 
 def add_location_markers(m: folium.Map, locations: pd.DataFrame | None, highlighted_chain: str | None) -> None:
-    """Add restaurant location points, emphasizing the selected chain."""
+    """Add restaurant location pins, emphasizing the selected chain."""
     if locations is None or locations.empty:
         return
     if not {"latitude", "longitude", "chain"}.issubset(locations.columns):
@@ -89,14 +89,14 @@ def add_location_markers(m: folium.Map, locations: pd.DataFrame | None, highligh
     for _, row in valid.iterrows():
         chain = str(row.get("chain", ""))
         is_highlighted = bool(highlighted_chain_key and chain.strip().lower() == highlighted_chain_key)
-        folium.CircleMarker(
+        icon = folium.Icon(
+            color="red" if is_highlighted else "blue",
+            icon="cutlery" if is_highlighted else "info-sign",
+            prefix="glyphicon",
+        )
+        folium.Marker(
             location=[float(row["latitude"]), float(row["longitude"])],
-            radius=8 if is_highlighted else 4,
-            weight=3 if is_highlighted else 1,
-            color="#ff4b4b" if is_highlighted else "#3388ff",
-            fill=True,
-            fill_color="#ff4b4b" if is_highlighted else "#3388ff",
-            fill_opacity=0.85 if is_highlighted else 0.45,
+            icon=icon,
             tooltip=_location_label(row),
             popup=folium.Popup(_location_label(row), max_width=300),
         ).add_to(m)
@@ -107,12 +107,17 @@ def build_map(
     zoom: int = DEFAULT_ZOOM,
     locations: pd.DataFrame | None = None,
     highlighted_chain: str | None = None,
+    auto_locate: bool = False,
 ) -> folium.Map:
-    """Build the selection map with circle selection and location markers."""
+    """Build the selection map with circle selection and location pins."""
     m = folium.Map(location=list(center), zoom_start=zoom, control_scale=True, zoom_control=False)
 
     if LocateControl is not None:
-        LocateControl(auto_start=True, keep_current_zoom_level=True).add_to(m)
+        LocateControl(
+            auto_start=auto_locate,
+            keep_current_zoom_level=True,
+            locate_options={"maxZoom": zoom},
+        ).add_to(m)
 
     Draw(
         export=False,
@@ -130,6 +135,23 @@ def build_map(
 
     add_location_markers(m, locations, highlighted_chain)
     return m
+
+
+def update_map_view_state(map_data: dict | None) -> None:
+    """Persist the current map center/zoom so Streamlit reruns do not reset the map."""
+    if not map_data:
+        return
+
+    center = map_data.get("center")
+    if isinstance(center, dict) and center.get("lat") is not None and center.get("lng") is not None:
+        st.session_state.map_center = (float(center["lat"]), float(center["lng"]))
+
+    zoom = map_data.get("zoom")
+    if zoom is not None:
+        try:
+            st.session_state.map_zoom = int(zoom)
+        except (TypeError, ValueError):
+            pass
 
 
 def render_single_item_recommendations(menu_items: pd.DataFrame) -> None:
@@ -453,20 +475,33 @@ def render_map_chain_finder() -> None:
         st.session_state.last_circle_signature = None
     if "highlight_chain_name" not in st.session_state:
         st.session_state.highlight_chain_name = None
+    if "map_center" not in st.session_state:
+        st.session_state.map_center = DEFAULT_CENTER
+    if "map_zoom" not in st.session_state:
+        st.session_state.map_zoom = DEFAULT_ZOOM
+    if "auto_locate_on_next_map" not in st.session_state:
+        st.session_state.auto_locate_on_next_map = True
 
     map_col, selection_col, chains_col = st.columns([1.8, 0.8, 1.05], gap="large")
 
     with map_col:
+        auto_locate = bool(st.session_state.auto_locate_on_next_map)
         map_data = st_folium(
             build_map(
+                center=st.session_state.map_center,
+                zoom=st.session_state.map_zoom,
                 locations=st.session_state.locations,
                 highlighted_chain=st.session_state.highlight_chain_name,
+                auto_locate=auto_locate,
             ),
             height=MAP_HEIGHT_PX,
             use_container_width=True,
-            returned_objects=["all_drawings", "last_active_drawing"],
+            returned_objects=["all_drawings", "last_active_drawing", "center", "zoom"],
             key=f"macro_map_{st.session_state.map_reset_token}",
         )
+        if auto_locate:
+            st.session_state.auto_locate_on_next_map = False
+        update_map_view_state(map_data)
 
     with selection_col:
         render_selection_panel(map_data)
