@@ -6,6 +6,11 @@ import streamlit as st
 from folium.plugins import Draw
 from streamlit_folium import st_folium
 
+try:
+    from folium.plugins import LocateControl
+except ImportError:  # pragma: no cover - depends on installed folium version
+    LocateControl = None
+
 from src.geojson_utils import (
     SelectionError,
     bbox_from_circle,
@@ -31,8 +36,8 @@ from src.ui_helpers import (
     nutrition_request_url,
 )
 
-DEFAULT_CENTER = (31.0000, -99.0000)  # Texas-wide starting view.
-DEFAULT_ZOOM = 6
+DEFAULT_CENTER = (31.0000, -99.0000)  # Fallback if browser location is unavailable/denied.
+DEFAULT_ZOOM = 8
 MAX_QUERY_AREA_SQ_MI = 250.0
 MAP_HEIGHT_PX = 650
 METERS_PER_MILE = 1609.344
@@ -63,9 +68,52 @@ def fetch_fast_food_locations_in_bbox(south: float, west: float, north: float, e
     return parse_fast_food_elements(payload)
 
 
-def build_map(center: tuple[float, float] = DEFAULT_CENTER, zoom: int = DEFAULT_ZOOM) -> folium.Map:
-    """Build the selection map with circle selection only."""
+def _location_label(row: pd.Series) -> str:
+    label = str(row.get("chain", "Unknown chain"))
+    name = str(row.get("name", "") or "")
+    if name and name != label:
+        label = f"{label} — {name}"
+    return label
+
+
+def add_location_markers(m: folium.Map, locations: pd.DataFrame | None, highlighted_chain: str | None) -> None:
+    """Add restaurant location points, emphasizing the selected chain."""
+    if locations is None or locations.empty:
+        return
+    if not {"latitude", "longitude", "chain"}.issubset(locations.columns):
+        return
+
+    valid = locations.dropna(subset=["latitude", "longitude"]).copy()
+    highlighted_chain_key = str(highlighted_chain or "").strip().lower()
+
+    for _, row in valid.iterrows():
+        chain = str(row.get("chain", ""))
+        is_highlighted = bool(highlighted_chain_key and chain.strip().lower() == highlighted_chain_key)
+        folium.CircleMarker(
+            location=[float(row["latitude"]), float(row["longitude"])],
+            radius=8 if is_highlighted else 4,
+            weight=3 if is_highlighted else 1,
+            color="#ff4b4b" if is_highlighted else "#3388ff",
+            fill=True,
+            fill_color="#ff4b4b" if is_highlighted else "#3388ff",
+            fill_opacity=0.85 if is_highlighted else 0.45,
+            tooltip=_location_label(row),
+            popup=folium.Popup(_location_label(row), max_width=300),
+        ).add_to(m)
+
+
+def build_map(
+    center: tuple[float, float] = DEFAULT_CENTER,
+    zoom: int = DEFAULT_ZOOM,
+    locations: pd.DataFrame | None = None,
+    highlighted_chain: str | None = None,
+) -> folium.Map:
+    """Build the selection map with circle selection and location markers."""
     m = folium.Map(location=list(center), zoom_start=zoom, control_scale=True, zoom_control=False)
+
+    if LocateControl is not None:
+        LocateControl(auto_start=True, keep_current_zoom_level=True).add_to(m)
+
     Draw(
         export=False,
         position="topright",
@@ -79,6 +127,8 @@ def build_map(center: tuple[float, float] = DEFAULT_CENTER, zoom: int = DEFAULT_
         },
         edit_options={"edit": True, "remove": True},
     ).add_to(m)
+
+    add_location_markers(m, locations, highlighted_chain)
     return m
 
 
@@ -251,7 +301,13 @@ def render_selectable_chain_table(annotated_chains: pd.DataFrame) -> pd.Series |
         },
     )
 
-    return selected_chain_from_table_event(table_event, annotated_chains)
+    selected_chain = selected_chain_from_table_event(table_event, annotated_chains)
+    selected_name = str(selected_chain["chain"]) if selected_chain is not None else None
+    if selected_name and st.session_state.get("highlight_chain_name") != selected_name:
+        st.session_state.highlight_chain_name = selected_name
+        st.rerun()
+
+    return selected_chain
 
 
 def render_chain_request_section(selected_chain: pd.Series | None, missing_chains: list[str]) -> None:
@@ -324,29 +380,29 @@ def render_unique_chains_panel(library) -> None:
     )
 
 
+def circle_signature(center_lat: float, center_lon: float, radius_m: float) -> tuple[float, float, float]:
+    """Stable signature so the same drawn circle is not searched repeatedly."""
+    return round(center_lat, 5), round(center_lon, 5), round(radius_m, 1)
+
+
 def render_selection_panel(map_data) -> None:
-    """Render selection controls and update session state when a search runs."""
+    """Render selection status and auto-search after a valid circle is drawn."""
     st.subheader("Selection")
-    button_left, button_right = st.columns(2)
-    with button_left:
-        find_clicked = st.button("Find fast-food chains", type="primary", width="stretch")
-    with button_right:
-        clear_clicked = st.button("Clear selection", width="stretch")
+    clear_clicked = st.button("Clear selection", width="stretch")
 
     if clear_clicked:
         st.session_state.locations = pd.DataFrame()
         st.session_state.chains = pd.DataFrame()
         st.session_state.map_reset_token += 1
+        st.session_state.last_circle_signature = None
+        st.session_state.highlight_chain_name = None
         st.rerun()
 
-    st.caption(f"Draw one circle under about {MAX_QUERY_AREA_SQ_MI:.0f} sq mi, then search.")
+    st.caption(f"Draw one circle under about {MAX_QUERY_AREA_SQ_MI:.0f} sq mi. The search runs automatically when the circle is valid.")
     latest_feature = get_latest_drawn_feature(map_data)
 
     if latest_feature is None:
-        if find_clicked:
-            st.warning("Draw a circle on the map before searching.")
-        else:
-            st.info("Click the circle tool, then drag on the map to set your search radius.")
+        st.info("Click the circle tool, then drag on the map to set your search radius.")
         return
 
     try:
@@ -357,22 +413,28 @@ def render_selection_panel(map_data) -> None:
         st.write(f"Selected circle: **{area_sq_miles:,.1f} sq mi** / **{radius_miles:,.1f} mi radius**")
 
         if area_sq_miles > MAX_QUERY_AREA_SQ_MI:
-            st.warning("That circle is too large for the public Overpass API prototype. Draw a smaller circle, then search again.")
-        elif find_clicked:
-            try:
-                with st.spinner("Searching OpenStreetMap..."):
-                    bbox_locations = fetch_fast_food_locations_in_bbox(south, west, north, east)
-                    locations = filter_locations_to_circle(bbox_locations, center_lat, center_lon, radius_m)
-                st.session_state.locations = locations
-                st.session_state.chains = unique_chains(locations)
-                st.rerun()
-            except RuntimeError as exc:
-                st.error("OpenStreetMap's public Overpass API rejected or timed out on this request.")
-                st.caption("Try a smaller circle first. This version catches the error instead of crashing. The technical details are below.")
-                with st.expander("Technical details"):
-                    st.code(str(exc))
-        else:
-            st.info("Circle ready. Click **Find fast-food chains** to search this area.")
+            st.warning("That circle is too large for the public Overpass API prototype. Draw a smaller circle to auto-search.")
+            return
+
+        signature = circle_signature(center_lat, center_lon, radius_m)
+        if st.session_state.get("last_circle_signature") == signature:
+            st.success("Search area loaded.")
+            return
+
+        try:
+            with st.spinner("Searching OpenStreetMap..."):
+                bbox_locations = fetch_fast_food_locations_in_bbox(south, west, north, east)
+                locations = filter_locations_to_circle(bbox_locations, center_lat, center_lon, radius_m)
+            st.session_state.locations = locations
+            st.session_state.chains = unique_chains(locations)
+            st.session_state.last_circle_signature = signature
+            st.session_state.highlight_chain_name = None
+            st.rerun()
+        except RuntimeError as exc:
+            st.error("OpenStreetMap's public Overpass API rejected or timed out on this request.")
+            st.caption("Try a smaller circle first. This version catches the error instead of crashing. The technical details are below.")
+            with st.expander("Technical details"):
+                st.code(str(exc))
     except SelectionError as exc:
         st.error(str(exc))
 
@@ -387,12 +449,19 @@ def render_map_chain_finder() -> None:
         st.session_state.chains = pd.DataFrame()
     if "map_reset_token" not in st.session_state:
         st.session_state.map_reset_token = 0
+    if "last_circle_signature" not in st.session_state:
+        st.session_state.last_circle_signature = None
+    if "highlight_chain_name" not in st.session_state:
+        st.session_state.highlight_chain_name = None
 
     map_col, selection_col, chains_col = st.columns([1.8, 0.8, 1.05], gap="large")
 
     with map_col:
         map_data = st_folium(
-            build_map(),
+            build_map(
+                locations=st.session_state.locations,
+                highlighted_chain=st.session_state.highlight_chain_name,
+            ),
             height=MAP_HEIGHT_PX,
             use_container_width=True,
             returned_objects=["all_drawings", "last_active_drawing"],
