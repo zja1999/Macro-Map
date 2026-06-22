@@ -31,7 +31,8 @@ from src.ui_helpers import (
 )
 
 DEFAULT_CENTER = (31.0000, -99.0000)
-DEFAULT_ZOOM = 9
+DEFAULT_ZOOM = 6  # Texas-wide fallback when browser geolocation is unavailable or denied.
+STARTER_LOCATION_ZOOM = 10  # Roughly surrounding-area view, about ~20 miles depending on screen size.
 SEARCH_ZOOM = 11
 MAX_QUERY_AREA_SQ_MI = 250.0
 MAP_HEIGHT_PX = 650
@@ -104,9 +105,8 @@ def add_location_pins(m: folium.Map, locations: pd.DataFrame, highlighted_chain:
 def build_map(locations: pd.DataFrame, highlighted_chain: str | None, auto_locate: bool) -> folium.Map:
     """Build a stable map.
 
-    User location is used only as a one-time starter center through Leaflet's
-    LocateControl. After that, the map uses the stored app center and never
-    tracks or repeatedly re-centers on browser location.
+    Browser location is used only as a one-time starter center. When geolocation
+    is unavailable or denied, the map remains at a Texas-wide fallback view.
     """
     center = st.session_state.get("stable_map_center", DEFAULT_CENTER)
     zoom = st.session_state.get("stable_map_zoom", DEFAULT_ZOOM)
@@ -115,8 +115,8 @@ def build_map(locations: pd.DataFrame, highlighted_chain: str | None, auto_locat
     if LocateControl is not None:
         LocateControl(
             auto_start=auto_locate,
-            keep_current_zoom_level=True,
-            locate_options={"maxZoom": DEFAULT_ZOOM, "watch": False},
+            keep_current_zoom_level=False,
+            locate_options={"maxZoom": STARTER_LOCATION_ZOOM, "watch": False, "setView": True},
         ).add_to(m)
 
     Draw(
