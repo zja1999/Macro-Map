@@ -214,26 +214,32 @@ def selected_chain_from_table_event(table_event, annotated_chains: pd.DataFrame)
     return annotated_chains.iloc[selected_index]
 
 
+def style_chain_table(display_table: pd.DataFrame):
+    """Color chain table text by nutrition status."""
+
+    def row_style(row: pd.Series) -> list[str]:
+        color = "color: #2e9f57; font-weight: 700" if row.get("Nutrition") == "On file" else "color: #ff4b4b; font-weight: 700"
+        return [color for _ in row.index]
+
+    return display_table.style.apply(row_style, axis=1)
+
+
 def render_selectable_chain_table(annotated_chains: pd.DataFrame) -> pd.Series | None:
     """Render chains as a normal selectable table and return the active row."""
-    table = annotated_chains[["chain", "locations", "nutrition_status", "nutrition_on_file"]].copy()
-    table["request_note"] = table["nutrition_on_file"].map(
-        lambda nutrition_on_file: "Already on file" if bool(nutrition_on_file) else "Select this row to request"
-    )
-    table = table.rename(
+    display_table = annotated_chains[["chain", "locations", "nutrition_status"]].copy()
+    display_table = display_table.rename(
         columns={
             "chain": "Chain",
             "locations": "# Locations",
             "nutrition_status": "Nutrition",
-            "request_note": "Request",
         }
     )
 
     table_event = st.dataframe(
-        table[["Chain", "# Locations", "Nutrition", "Request"]],
+        style_chain_table(display_table),
         width="stretch",
         hide_index=True,
-        height=dataframe_height(len(table), min_height=220, max_height=420),
+        height=dataframe_height(len(display_table), min_height=220, max_height=420),
         on_select="rerun",
         selection_mode="single-row",
         key="unique_chains_selectable_table",
@@ -241,7 +247,6 @@ def render_selectable_chain_table(annotated_chains: pd.DataFrame) -> pd.Series |
             "Chain": "Chain",
             "# Locations": "# Locations",
             "Nutrition": "Nutrition",
-            "Request": "Request",
         },
     )
 
