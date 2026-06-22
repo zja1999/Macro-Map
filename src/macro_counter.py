@@ -16,44 +16,65 @@ DEFAULT_TARGETS = {
     "carbs_g": 200,
     "fat_g": 70,
 }
-DIET_STYLE_PRESETS = {
-    "Balanced": {
-        "protein_pct": 0.30,
-        "carbs_pct": 0.40,
-        "fat_pct": 0.30,
-        "description": "General-purpose split with moderate protein, carbs, and fat.",
+SEX_OPTIONS = ["Not specified (average)", "Female", "Male"]
+ACTIVITY_MULTIPLIERS = {
+    "Sedentary: little exercise": 1.2,
+    "Light: 1-3 workouts/week": 1.375,
+    "Moderate: 3-5 workouts/week": 1.55,
+    "Very active: 6-7 workouts/week": 1.725,
+    "Athlete / physical job": 1.9,
+}
+GOAL_PACE_OPTIONS = {
+    "Lose weight": {
+        "Slow loss (-250 kcal/day)": -250,
+        "Moderate loss (-500 kcal/day)": -500,
+        "Aggressive loss (-750 kcal/day)": -750,
     },
-    "High protein": {
-        "protein_pct": 0.35,
-        "carbs_pct": 0.35,
-        "fat_pct": 0.30,
-        "description": "Higher protein while keeping enough carbs for training and daily energy.",
+    "Maintain weight": {
+        "Maintain (0 kcal/day)": 0,
+    },
+    "Gain weight": {
+        "Lean gain (+150 kcal/day)": 150,
+        "Moderate gain (+300 kcal/day)": 300,
+        "Fast gain (+500 kcal/day)": 500,
+    },
+}
+FITNESS_GOAL_PRESETS = {
+    "General fitness / balanced": {
+        "protein_g_per_kg": 1.6,
+        "carb_share": 0.55,
+        "fat_share": 0.45,
+        "description": "Moderate protein with a balanced carb/fat split.",
+    },
+    "Fat loss / muscle retention": {
+        "protein_g_per_kg": 2.0,
+        "carb_share": 0.45,
+        "fat_share": 0.55,
+        "description": "Higher protein to support lean-mass retention while dieting.",
+    },
+    "Muscle gain / strength": {
+        "protein_g_per_kg": 1.8,
+        "carb_share": 0.60,
+        "fat_share": 0.40,
+        "description": "High protein with more carbs for lifting performance.",
+    },
+    "Endurance performance": {
+        "protein_g_per_kg": 1.6,
+        "carb_share": 0.70,
+        "fat_share": 0.30,
+        "description": "More carbs for longer training sessions.",
     },
     "Lower carb": {
-        "protein_pct": 0.35,
-        "carbs_pct": 0.25,
-        "fat_pct": 0.40,
+        "protein_g_per_kg": 1.8,
+        "carb_share": 0.30,
+        "fat_share": 0.70,
         "description": "Higher protein and fat with fewer carbs, but not strict keto.",
     },
     "Keto-style": {
-        "protein_pct": 0.25,
-        "carbs_pct": 0.05,
-        "fat_pct": 0.70,
-        "description": "Very low carb, high fat. Restrictive; best treated as a specialty preset.",
+        "protein_g_per_kg": 1.6,
+        "carb_pct_override": 0.05,
+        "description": "Very low carb and high fat. Restrictive; best treated as a specialty preset.",
     },
-    "Endurance": {
-        "protein_pct": 0.25,
-        "carbs_pct": 0.55,
-        "fat_pct": 0.20,
-        "description": "Higher-carb split for users who want more training fuel.",
-    },
-}
-PROTEIN_ACTIVITY_FACTORS_G_PER_KG = {
-    "Sedentary / general health": 0.8,
-    "Light activity": 1.4,
-    "Moderate training": 1.6,
-    "Heavy training": 1.8,
-    "Cutting / lean-mass focus": 2.0,
 }
 
 
@@ -66,42 +87,57 @@ def coerce_macro_columns(df: pd.DataFrame) -> pd.DataFrame:
     return result
 
 
-def targets_from_percentages(calories: float, preset: dict[str, float | str]) -> dict[str, float]:
-    """Convert calorie percentages into grams of protein, carbs, and fat."""
-    calories = max(float(calories), 0.0)
-    return {
-        "calories": round(calories),
-        "protein_g": round(calories * float(preset["protein_pct"]) / KCAL_PER_GRAM["protein_g"]),
-        "carbs_g": round(calories * float(preset["carbs_pct"]) / KCAL_PER_GRAM["carbs_g"]),
-        "fat_g": round(calories * float(preset["fat_pct"]) / KCAL_PER_GRAM["fat_g"]),
-    }
-
-
-def body_weight_protein_target(weight_lbs: float, activity_level: str) -> float:
-    """Return protein grams from body weight and selected activity level."""
+def mifflin_st_jeor_bmr(weight_lbs: float, height_inches: float, age_years: int, sex: str) -> float:
+    """Estimate basal metabolic rate with the Mifflin-St Jeor equation."""
     weight_kg = max(float(weight_lbs), 0.0) / 2.20462
-    protein_factor = PROTEIN_ACTIVITY_FACTORS_G_PER_KG[activity_level]
-    return round(weight_kg * protein_factor)
+    height_cm = max(float(height_inches), 0.0) * 2.54
+    base = 10 * weight_kg + 6.25 * height_cm - 5 * max(int(age_years), 0)
+
+    if sex == "Male":
+        return base + 5
+    if sex == "Female":
+        return base - 161
+
+    # Neutral default when the user has not selected a sex for the equation.
+    return ((base + 5) + (base - 161)) / 2
 
 
-def targets_from_body_weight(calories: float, weight_lbs: float, activity_level: str, diet_style: str) -> dict[str, float]:
-    """Set protein from body weight and split remaining calories across carbs/fat by style."""
+def current_height_inches() -> float:
+    """Return height in inches from the current Streamlit inputs."""
+    feet = float(st.session_state.get("macro_height_feet", 5) or 0)
+    inches = float(st.session_state.get("macro_height_inches", 10) or 0)
+    return feet * 12 + inches
+
+
+def calorie_delta_for_goal(weight_goal: str, pace: str) -> int:
+    """Return daily calorie adjustment for selected weight goal and pace."""
+    return int(GOAL_PACE_OPTIONS.get(weight_goal, {}).get(pace, 0))
+
+
+def calculated_macro_targets(calories: float, weight_lbs: float, fitness_goal: str) -> dict[str, float]:
+    """Calculate macro grams from calories, body weight, and fitness goal."""
     calories = max(float(calories), 0.0)
-    protein_g = body_weight_protein_target(weight_lbs, activity_level)
+    preset = FITNESS_GOAL_PRESETS[fitness_goal]
+    weight_kg = max(float(weight_lbs), 0.0) / 2.20462
+    protein_g = round(weight_kg * float(preset["protein_g_per_kg"]))
     protein_calories = protein_g * KCAL_PER_GRAM["protein_g"]
 
-    # Keep the target possible if the user's calorie target is very low.
-    if protein_calories > calories and calories > 0:
+    # Keep recommendations feasible for low-calorie targets.
+    if calories > 0 and protein_calories > calories * 0.45:
         protein_g = round(calories * 0.45 / KCAL_PER_GRAM["protein_g"])
         protein_calories = protein_g * KCAL_PER_GRAM["protein_g"]
 
-    remaining_calories = max(calories - protein_calories, 0.0)
-    preset = DIET_STYLE_PRESETS[diet_style]
-    carb_pct = float(preset["carbs_pct"])
-    fat_pct = float(preset["fat_pct"])
-    carb_fat_total = max(carb_pct + fat_pct, 0.001)
-    carbs_g = round(remaining_calories * (carb_pct / carb_fat_total) / KCAL_PER_GRAM["carbs_g"])
-    fat_g = round(remaining_calories * (fat_pct / carb_fat_total) / KCAL_PER_GRAM["fat_g"])
+    if "carb_pct_override" in preset:
+        carbs_g = round(calories * float(preset["carb_pct_override"]) / KCAL_PER_GRAM["carbs_g"])
+        carb_calories = carbs_g * KCAL_PER_GRAM["carbs_g"]
+        fat_g = round(max(calories - protein_calories - carb_calories, 0) / KCAL_PER_GRAM["fat_g"])
+    else:
+        remaining_calories = max(calories - protein_calories, 0)
+        carb_share = float(preset["carb_share"])
+        fat_share = float(preset["fat_share"])
+        share_total = max(carb_share + fat_share, 0.001)
+        carbs_g = round(remaining_calories * (carb_share / share_total) / KCAL_PER_GRAM["carbs_g"])
+        fat_g = round(remaining_calories * (fat_share / share_total) / KCAL_PER_GRAM["fat_g"])
 
     return {
         "calories": round(calories),
@@ -111,13 +147,37 @@ def targets_from_body_weight(calories: float, weight_lbs: float, activity_level:
     }
 
 
-def apply_macro_targets(targets: dict[str, float], preset_name: str | None = None) -> None:
-    """Apply calculated macro targets into Streamlit session state.
+def build_macro_recommendation() -> dict[str, float | str]:
+    """Build the current BMR/TDEE/calorie/macro recommendation from UI inputs."""
+    weight_lbs = float(st.session_state.get("macro_body_weight_lbs", 180.0) or 0)
+    age_years = int(st.session_state.get("macro_age_years", 30) or 0)
+    height_inches = current_height_inches()
+    sex = str(st.session_state.get("macro_sex", SEX_OPTIONS[0]))
+    activity_level = str(st.session_state.get("macro_activity_level", next(iter(ACTIVITY_MULTIPLIERS))))
+    weight_goal = str(st.session_state.get("macro_weight_goal", "Maintain weight"))
+    pace = str(st.session_state.get("macro_weight_pace", "Maintain (0 kcal/day)"))
+    fitness_goal = str(st.session_state.get("macro_fitness_goal", "General fitness / balanced"))
 
-    This is intended to run as a Streamlit widget callback, before the target
-    number_input widgets are instantiated on the rerun. Updating these keys
-    inline after the widgets exist causes StreamlitAPIException.
-    """
+    bmr = mifflin_st_jeor_bmr(weight_lbs, height_inches, age_years, sex)
+    activity_multiplier = ACTIVITY_MULTIPLIERS[activity_level]
+    maintenance_calories = bmr * activity_multiplier
+    calorie_delta = calorie_delta_for_goal(weight_goal, pace)
+    target_calories = max(maintenance_calories + calorie_delta, 0)
+    targets = calculated_macro_targets(target_calories, weight_lbs, fitness_goal)
+
+    return {
+        "bmr": round(bmr),
+        "maintenance_calories": round(maintenance_calories),
+        "calorie_delta": calorie_delta,
+        "activity_multiplier": activity_multiplier,
+        "fitness_goal": fitness_goal,
+        "fitness_note": FITNESS_GOAL_PRESETS[fitness_goal]["description"],
+        **targets,
+    }
+
+
+def apply_macro_targets(targets: dict[str, float], preset_name: str | None = None) -> None:
+    """Apply calculated macro targets into Streamlit session state."""
     for key in CORE_TARGET_COLS:
         st.session_state[f"macro_target_{key}"] = float(targets.get(key, 0) or 0)
     if preset_name:
@@ -173,6 +233,22 @@ def _ensure_counter_state() -> None:
         st.session_state.macro_profile_name = "Guest"
     if "macro_body_weight_lbs" not in st.session_state:
         st.session_state.macro_body_weight_lbs = 180.0
+    if "macro_age_years" not in st.session_state:
+        st.session_state.macro_age_years = 30
+    if "macro_height_feet" not in st.session_state:
+        st.session_state.macro_height_feet = 5
+    if "macro_height_inches" not in st.session_state:
+        st.session_state.macro_height_inches = 10
+    if "macro_sex" not in st.session_state:
+        st.session_state.macro_sex = SEX_OPTIONS[0]
+    if "macro_activity_level" not in st.session_state:
+        st.session_state.macro_activity_level = "Moderate: 3-5 workouts/week"
+    if "macro_weight_goal" not in st.session_state:
+        st.session_state.macro_weight_goal = "Maintain weight"
+    if "macro_weight_pace" not in st.session_state:
+        st.session_state.macro_weight_pace = "Maintain (0 kcal/day)"
+    if "macro_fitness_goal" not in st.session_state:
+        st.session_state.macro_fitness_goal = "General fitness / balanced"
     for key, value in DEFAULT_TARGETS.items():
         target_key = f"macro_target_{key}"
         if target_key not in st.session_state:
@@ -187,6 +263,17 @@ def _download_payload() -> str:
     payload = {
         "profile_name": st.session_state.get("macro_profile_name", "Guest"),
         "targets": _current_targets(),
+        "calculator_inputs": {
+            "age_years": st.session_state.get("macro_age_years"),
+            "sex": st.session_state.get("macro_sex"),
+            "height_feet": st.session_state.get("macro_height_feet"),
+            "height_inches": st.session_state.get("macro_height_inches"),
+            "weight_lbs": st.session_state.get("macro_body_weight_lbs"),
+            "activity_level": st.session_state.get("macro_activity_level"),
+            "weight_goal": st.session_state.get("macro_weight_goal"),
+            "weight_pace": st.session_state.get("macro_weight_pace"),
+            "fitness_goal": st.session_state.get("macro_fitness_goal"),
+        },
         "items": st.session_state.get("macro_counter_items", []),
     }
     return json.dumps(payload, indent=2)
@@ -200,133 +287,122 @@ def _load_profile_payload(uploaded_file) -> None:
     for key, default in DEFAULT_TARGETS.items():
         st.session_state[f"macro_target_{key}"] = float(targets.get(key, default) or 0)
 
+    calculator_inputs = payload.get("calculator_inputs", {})
+    input_key_map = {
+        "age_years": "macro_age_years",
+        "sex": "macro_sex",
+        "height_feet": "macro_height_feet",
+        "height_inches": "macro_height_inches",
+        "weight_lbs": "macro_body_weight_lbs",
+        "activity_level": "macro_activity_level",
+        "weight_goal": "macro_weight_goal",
+        "weight_pace": "macro_weight_pace",
+        "fitness_goal": "macro_fitness_goal",
+    }
+    for payload_key, session_key in input_key_map.items():
+        if payload_key in calculator_inputs:
+            st.session_state[session_key] = calculator_inputs[payload_key]
+
     st.session_state.macro_counter_items = list(payload.get("items", []))
     st.session_state.macro_profile_loaded = True
 
 
-def _render_preset_buttons() -> None:
-    st.subheader("Macro target presets")
+def _render_calculator_inputs() -> dict[str, float | str]:
+    st.subheader("Macro calculator")
     st.caption(
-        "These buttons use your current calorie target and split those calories into protein, carbs, and fat. "
-        "They are starting points, not medical advice."
+        "Enter basic health and goal details first. The app estimates maintenance calories, then suggests a target for losing, maintaining, or gaining weight."
     )
 
-    calories = float(st.session_state.get("macro_target_calories", DEFAULT_TARGETS["calories"]) or 0)
-    preset_cols = st.columns(len(DIET_STYLE_PRESETS))
-    for idx, (name, preset) in enumerate(DIET_STYLE_PRESETS.items()):
-        targets = targets_from_percentages(calories, preset)
-        button_label = f"{name}\n{targets['protein_g']:.0f}P / {targets['carbs_g']:.0f}C / {targets['fat_g']:.0f}F"
-        preset_cols[idx].button(
-            button_label,
-            key=f"macro_preset_{name}",
-            on_click=apply_macro_targets,
-            args=(targets, name),
-            width="stretch",
-        )
+    top_cols = st.columns([1.2, 1, 0.8, 0.8, 0.8, 1])
+    top_cols[0].text_input("Profile name", key="macro_profile_name")
+    top_cols[1].selectbox("Sex for BMR equation", SEX_OPTIONS, key="macro_sex")
+    top_cols[2].number_input("Age", min_value=13, max_value=100, step=1, key="macro_age_years")
+    top_cols[3].number_input("Height ft", min_value=3, max_value=8, step=1, key="macro_height_feet")
+    top_cols[4].number_input("Height in", min_value=0, max_value=11, step=1, key="macro_height_inches")
+    top_cols[5].number_input("Weight (lb)", min_value=50.0, max_value=600.0, step=1.0, key="macro_body_weight_lbs")
 
-    with st.expander("Preset details", expanded=False):
-        rows = []
-        for name, preset in DIET_STYLE_PRESETS.items():
-            targets = targets_from_percentages(calories, preset)
-            rows.append(
-                {
-                    "Style": name,
-                    "Calories": targets["calories"],
-                    "Protein %": f"{float(preset['protein_pct']) * 100:.0f}%",
-                    "Carbs %": f"{float(preset['carbs_pct']) * 100:.0f}%",
-                    "Fat %": f"{float(preset['fat_pct']) * 100:.0f}%",
-                    "Protein (g)": targets["protein_g"],
-                    "Carbs (g)": targets["carbs_g"],
-                    "Fat (g)": targets["fat_g"],
-                    "Notes": preset["description"],
-                }
-            )
-        st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)
+    goal_cols = st.columns([1.25, 1, 1.2, 1.4])
+    goal_cols[0].selectbox("Activity level", list(ACTIVITY_MULTIPLIERS.keys()), key="macro_activity_level")
+    goal_cols[1].selectbox("Weight goal", list(GOAL_PACE_OPTIONS.keys()), key="macro_weight_goal")
+
+    pace_options = list(GOAL_PACE_OPTIONS[st.session_state.macro_weight_goal].keys())
+    if st.session_state.get("macro_weight_pace") not in pace_options:
+        st.session_state.macro_weight_pace = pace_options[0]
+    goal_cols[2].selectbox("Goal pace", pace_options, key="macro_weight_pace")
+    goal_cols[3].selectbox("Fitness goal", list(FITNESS_GOAL_PRESETS.keys()), key="macro_fitness_goal")
+
+    return build_macro_recommendation()
 
 
-def _render_body_weight_helper() -> None:
-    with st.expander("Body-weight protein helper", expanded=False):
+def _render_recommendation(recommendation: dict[str, float | str]) -> None:
+    st.subheader("Recommended targets")
+    metric_cols = st.columns(6)
+    metric_cols[0].metric("BMR", f"{float(recommendation['bmr']):.0f}")
+    metric_cols[1].metric("Maintenance", f"{float(recommendation['maintenance_calories']):.0f}")
+    metric_cols[2].metric("Suggested calories", f"{float(recommendation['calories']):.0f}", f"{float(recommendation['calorie_delta']):+.0f}/day")
+    metric_cols[3].metric("Protein", f"{float(recommendation['protein_g']):.0f}g")
+    metric_cols[4].metric("Carbs", f"{float(recommendation['carbs_g']):.0f}g")
+    metric_cols[5].metric("Fat", f"{float(recommendation['fat_g']):.0f}g")
+
+    st.caption(f"Fitness split: **{recommendation['fitness_goal']}** — {recommendation['fitness_note']}")
+
+    if float(recommendation["calories"]) < 1200:
+        st.warning("This suggested calorie target is very low. Consider a slower pace or professional guidance.")
+    elif float(recommendation["calories"]) < float(recommendation["bmr"]):
+        st.warning("This target is below estimated BMR. It may be too aggressive for many users.")
+
+    target_payload = {key: float(recommendation[key]) for key in CORE_TARGET_COLS}
+    st.button(
+        "Use recommended targets",
+        type="primary",
+        on_click=apply_macro_targets,
+        args=(target_payload, "Calculated recommendation"),
+        width="stretch",
+    )
+
+
+def _render_active_targets() -> None:
+    st.subheader("Active daily targets")
+    st.caption("These editable numbers drive the remaining-calories/macros totals below.")
+    target_cols = st.columns(4)
+    target_cols[0].number_input("Calories", min_value=0, max_value=10000, step=50, key="macro_target_calories")
+    target_cols[1].number_input("Protein (g)", min_value=0, max_value=500, step=5, key="macro_target_protein_g")
+    target_cols[2].number_input("Carbs (g)", min_value=0, max_value=1000, step=5, key="macro_target_carbs_g")
+    target_cols[3].number_input("Fat (g)", min_value=0, max_value=500, step=5, key="macro_target_fat_g")
+
+
+def _render_profile_tools() -> None:
+    with st.expander("Save or load this profile/day", expanded=False):
         st.caption(
-            "This keeps your current calorie target, sets protein from body weight/activity, "
-            "then splits the remaining calories between carbs and fat using the selected diet style."
+            "This prototype stores data in the current Streamlit session. Download/upload JSON to move a profile between visits until a database is added."
         )
-
-        input_cols = st.columns([1, 1.35, 1])
-        weight_lbs = input_cols[0].number_input(
-            "Body weight (lb)",
-            min_value=50.0,
-            max_value=600.0,
-            step=1.0,
-            key="macro_body_weight_lbs",
-        )
-        activity_level = input_cols[1].selectbox(
-            "Activity / protein need",
-            list(PROTEIN_ACTIVITY_FACTORS_G_PER_KG.keys()),
-            index=2,
-            key="macro_activity_level",
-        )
-        diet_style = input_cols[2].selectbox(
-            "Carb/fat style",
-            list(DIET_STYLE_PRESETS.keys()),
-            index=0,
-            key="macro_body_diet_style",
-        )
-
-        calories = float(st.session_state.get("macro_target_calories", DEFAULT_TARGETS["calories"]) or 0)
-        targets = targets_from_body_weight(calories, weight_lbs, activity_level, diet_style)
-        factor = PROTEIN_ACTIVITY_FACTORS_G_PER_KG[activity_level]
-
-        preview_cols = st.columns(4)
-        preview_cols[0].metric("Calories", f"{targets['calories']:.0f}")
-        preview_cols[1].metric("Protein", f"{targets['protein_g']:.0f}g", f"{factor:g}g/kg")
-        preview_cols[2].metric("Carbs", f"{targets['carbs_g']:.0f}g")
-        preview_cols[3].metric("Fat", f"{targets['fat_g']:.0f}g")
-
-        st.button(
-            "Apply body-aware targets",
-            type="primary",
-            on_click=apply_macro_targets,
-            args=(targets, f"Body-aware {diet_style}"),
+        if st.session_state.pop("macro_profile_loaded", False):
+            st.success("Profile loaded.")
+        save_col, load_col = st.columns(2)
+        save_col.download_button(
+            "Download profile/day JSON",
+            data=_download_payload().encode("utf-8"),
+            file_name="macro_map_profile.json",
+            mime="application/json",
             width="stretch",
         )
+        uploaded_file = load_col.file_uploader("Load profile/day JSON", type="json")
+        if uploaded_file is not None:
+            load_col.button(
+                "Apply uploaded profile",
+                on_click=_load_profile_payload,
+                args=(uploaded_file,),
+                width="stretch",
+            )
 
 
 def _render_profile_controls() -> None:
-    st.subheader("Profile and goals")
-    st.caption(
-        "This prototype stores the profile in the current Streamlit session. "
-        "Use download/upload to move a profile between visits until a real database is added."
-    )
-    if st.session_state.pop("macro_profile_loaded", False):
-        st.success("Profile loaded.")
-
-    profile_col, cal_col, protein_col, carb_col, fat_col = st.columns([1.4, 1, 1, 1, 1])
-    profile_col.text_input("Profile name", key="macro_profile_name")
-    cal_col.number_input("Calories", min_value=0, max_value=10000, step=50, key="macro_target_calories")
-    protein_col.number_input("Protein (g)", min_value=0, max_value=500, step=5, key="macro_target_protein_g")
-    carb_col.number_input("Carbs (g)", min_value=0, max_value=1000, step=5, key="macro_target_carbs_g")
-    fat_col.number_input("Fat (g)", min_value=0, max_value=500, step=5, key="macro_target_fat_g")
-
+    recommendation = _render_calculator_inputs()
     st.divider()
-    _render_preset_buttons()
-    _render_body_weight_helper()
-
-    save_col, load_col = st.columns(2)
-    save_col.download_button(
-        "Download profile/day JSON",
-        data=_download_payload().encode("utf-8"),
-        file_name="macro_map_profile.json",
-        mime="application/json",
-        width="stretch",
-    )
-    uploaded_file = load_col.file_uploader("Load profile/day JSON", type="json")
-    if uploaded_file is not None:
-        load_col.button(
-            "Apply uploaded profile",
-            on_click=_load_profile_payload,
-            args=(uploaded_file,),
-            width="stretch",
-        )
+    _render_recommendation(recommendation)
+    st.divider()
+    _render_active_targets()
+    _render_profile_tools()
 
 
 def _render_add_items(menu_items: pd.DataFrame) -> None:
@@ -444,7 +520,7 @@ def _render_totals() -> None:
 def render_macro_counter(menu_items: pd.DataFrame) -> None:
     """Render an in-session macro counter for selected-area menu items."""
     _ensure_counter_state()
-    st.caption("Prototype: add menu items from the selected-chain results and track calories/macros against simple goals.")
+    st.caption("Estimate calorie/macros targets, manually adjust if needed, then add selected-chain menu items to your daily totals.")
     _render_profile_controls()
     st.divider()
     _render_add_items(menu_items)
