@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from math import cos, radians
+from math import asin, cos, pi, radians, sin, sqrt
 from typing import Any
 
 import pandas as pd
@@ -8,6 +8,11 @@ import pandas as pd
 
 class SelectionError(ValueError):
     pass
+
+
+EARTH_RADIUS_M = 6_371_008.8
+METERS_PER_MILE = 1609.344
+METERS_PER_DEGREE_LAT = 111_320.0
 
 
 def get_latest_drawn_feature(map_data: dict[str, Any] | None) -> dict[str, Any] | None:
@@ -49,6 +54,28 @@ def polygon_latlon_from_feature(feature: dict[str, Any]) -> list[tuple[float, fl
     return latlon
 
 
+def circle_from_feature(feature: dict[str, Any]) -> tuple[float, float, float]:
+    """Extract a Leaflet.draw circle as (center_lat, center_lon, radius_meters)."""
+    geometry = feature.get("geometry", feature)
+    geom_type = geometry.get("type")
+    coords = geometry.get("coordinates")
+
+    if geom_type != "Point" or not coords or len(coords) < 2:
+        raise SelectionError("Draw a circle selection. Other map shapes are not supported in this version.")
+
+    properties = feature.get("properties") or {}
+    radius = properties.get("radius") or properties.get("_mRadius") or feature.get("radius")
+    if radius is None:
+        raise SelectionError("Draw a circle by clicking the circle tool, then dragging to set the radius.")
+
+    lon, lat = coords[:2]
+    radius_m = float(radius)
+    if radius_m <= 0:
+        raise SelectionError("The selected circle needs a radius larger than zero.")
+
+    return float(lat), float(lon), radius_m
+
+
 def polygon_to_overpass_poly(latlon: list[tuple[float, float]]) -> str:
     """Return Overpass poly string: 'lat lon lat lon ...'. Kept for future use."""
     return " ".join(f"{lat:.7f} {lon:.7f}" for lat, lon in latlon)
@@ -61,6 +88,14 @@ def bbox_from_latlon(latlon: list[tuple[float, float]]) -> tuple[float, float, f
     return min(lats), min(lons), max(lats), max(lons)
 
 
+def bbox_from_circle(center_lat: float, center_lon: float, radius_m: float) -> tuple[float, float, float, float]:
+    """Return south, west, north, east for a circle's bounding box."""
+    delta_lat = radius_m / METERS_PER_DEGREE_LAT
+    lon_scale = max(cos(radians(center_lat)), 0.01)
+    delta_lon = radius_m / (METERS_PER_DEGREE_LAT * lon_scale)
+    return center_lat - delta_lat, center_lon - delta_lon, center_lat + delta_lat, center_lon + delta_lon
+
+
 def rough_bbox_area_sq_miles(latlon: list[tuple[float, float]]) -> float:
     """Quick rough area using bounding box; good enough for query-size warnings."""
     min_lat, min_lon, max_lat, max_lon = bbox_from_latlon(latlon)
@@ -68,6 +103,22 @@ def rough_bbox_area_sq_miles(latlon: list[tuple[float, float]]) -> float:
     miles_per_degree_lat = 69.0
     miles_per_degree_lon = 69.172 * cos(radians(mid_lat))
     return abs(max_lat - min_lat) * miles_per_degree_lat * abs(max_lon - min_lon) * miles_per_degree_lon
+
+
+def circle_area_sq_miles(radius_m: float) -> float:
+    """Return selected circle area in square miles."""
+    radius_miles = max(float(radius_m), 0.0) / METERS_PER_MILE
+    return pi * radius_miles**2
+
+
+def haversine_distance_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Return great-circle distance between two lat/lon points in meters."""
+    lat1_rad, lon1_rad = radians(lat1), radians(lon1)
+    lat2_rad, lon2_rad = radians(lat2), radians(lon2)
+    dlat = lat2_rad - lat1_rad
+    dlon = lon2_rad - lon1_rad
+    a = sin(dlat / 2) ** 2 + cos(lat1_rad) * cos(lat2_rad) * sin(dlon / 2) ** 2
+    return 2 * EARTH_RADIUS_M * asin(min(1.0, sqrt(a)))
 
 
 def point_in_polygon(lat: float, lon: float, polygon_latlon: list[tuple[float, float]]) -> bool:
@@ -97,6 +148,11 @@ def point_in_polygon(lat: float, lon: float, polygon_latlon: list[tuple[float, f
     return inside
 
 
+def point_in_circle(lat: float, lon: float, center_lat: float, center_lon: float, radius_m: float) -> bool:
+    """Return True when a point is inside a drawn circle."""
+    return haversine_distance_m(lat, lon, center_lat, center_lon) <= radius_m
+
+
 def filter_locations_to_polygon(df: pd.DataFrame, polygon_latlon: list[tuple[float, float]]) -> pd.DataFrame:
     """Filter location rows to only points inside the drawn polygon.
 
@@ -108,4 +164,14 @@ def filter_locations_to_polygon(df: pd.DataFrame, polygon_latlon: list[tuple[flo
 
     valid = df.dropna(subset=["latitude", "longitude"]).copy()
     mask = [point_in_polygon(row.latitude, row.longitude, polygon_latlon) for row in valid.itertuples()]
+    return valid.loc[mask].reset_index(drop=True)
+
+
+def filter_locations_to_circle(df: pd.DataFrame, center_lat: float, center_lon: float, radius_m: float) -> pd.DataFrame:
+    """Filter location rows to only points inside a drawn circle."""
+    if df.empty or "latitude" not in df.columns or "longitude" not in df.columns:
+        return df
+
+    valid = df.dropna(subset=["latitude", "longitude"]).copy()
+    mask = [point_in_circle(row.latitude, row.longitude, center_lat, center_lon, radius_m) for row in valid.itertuples()]
     return valid.loc[mask].reset_index(drop=True)
