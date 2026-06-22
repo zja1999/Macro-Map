@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 
 import streamlit as st
 
@@ -41,6 +41,52 @@ def inject_responsive_styles() -> None:
             div[data-testid="stDownloadButton"] > button,
             div[data-testid="stLinkButton"] > a {
                 width: 100%;
+            }
+
+            .macro-chain-table {
+                border: 1px solid rgba(250, 250, 250, 0.16);
+                border-radius: 0.5rem;
+                overflow: hidden;
+                margin: 0.5rem 0 1rem 0;
+            }
+
+            .macro-chain-table table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 0.9rem;
+            }
+
+            .macro-chain-table th,
+            .macro-chain-table td {
+                border-bottom: 1px solid rgba(250, 250, 250, 0.12);
+                padding: 0.55rem 0.6rem;
+                text-align: left;
+                vertical-align: middle;
+            }
+
+            .macro-chain-table th {
+                color: rgba(250, 250, 250, 0.78);
+                font-weight: 600;
+                background: rgba(250, 250, 250, 0.03);
+            }
+
+            .macro-chain-table tr:last-child td {
+                border-bottom: none;
+            }
+
+            .macro-chain-on-file {
+                color: #2e9f57;
+                font-weight: 700;
+            }
+
+            .macro-chain-missing,
+            .macro-chain-missing a {
+                color: #ff4b4b;
+                font-weight: 700;
+            }
+
+            .macro-chain-email a {
+                font-size: 0.85rem;
             }
 
             /* Streamlit's default mobile stacking can still leave awkward widths. */
@@ -141,30 +187,30 @@ def configured_contact_email() -> str:
 
 
 def nutrition_request_mailto_url(chain: str) -> str | None:
-    """Return a pre-filled mailto URL when a contact email has been configured."""
+    """Return a pre-filled mailto draft URL when a contact email has been configured."""
     recipient = configured_contact_email()
     if not recipient:
         return None
 
-    params = urlencode(
-        {
-            "subject": f"Macro Map nutrition request: {chain}",
-            "body": nutrition_request_message(chain),
-        }
-    )
-    return f"mailto:{recipient}?{params}"
+    subject = quote(f"Macro Map nutrition request: {chain}", safe="")
+    body = quote(nutrition_request_message(chain).replace("\n", "\r\n"), safe="")
+    return f"mailto:{quote(recipient, safe='@.,+-_')}?subject={subject}&body={body}"
 
 
 def render_missing_chain_request_panel(missing_chains: list[str]) -> None:
-    """Render a smoother request path for chains with no nutrition CSV yet."""
+    """Render a request path for chains with no nutrition CSV yet.
+
+    The active compact layout now puts request links directly in the chain table,
+    but this helper remains for older layouts.
+    """
     if not missing_chains:
         st.success("All chains in this selection have nutrition CSVs on file.")
         return
 
     with st.expander("Request missing nutrition data", expanded=False):
         st.caption(
-            "Pick a missing chain and send a pre-filled request. GitHub issues are best, "
-            "but a copyable message is available for users without GitHub."
+            "Pick a missing chain and open a pre-filled request. The email option opens a draft; "
+            "it does not send automatically."
         )
         selected_chain = st.selectbox("Missing chain", missing_chains, key="missing_chain_request_select")
         request_message = nutrition_request_message(selected_chain)
@@ -174,13 +220,13 @@ def render_missing_chain_request_panel(missing_chains: list[str]) -> None:
 
         email_url = nutrition_request_mailto_url(selected_chain)
         if email_url:
-            email_col.link_button("Email request", email_url, width="stretch")
+            email_col.link_button("Open email draft", email_url, width="stretch")
         else:
-            email_col.caption("Email requests can be enabled with `contact_email` in Streamlit secrets.")
+            email_col.caption("Email drafts can be enabled with `contact_email` in Streamlit secrets.")
 
         st.text_area(
             "Copyable request message",
             request_message,
             height=130,
-            help="Use this if the user does not have GitHub or email requests are not configured.",
+            help="Use this if the user does not have GitHub or email drafts are not configured.",
         )
