@@ -104,7 +104,7 @@ def render_single_item_recommendations(menu_items: pd.DataFrame) -> None:
     present_cols = [col for col in display_cols if col in recommendations.columns]
     st.dataframe(
         recommendations[present_cols],
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         height=dataframe_height(len(recommendations), min_height=220, max_height=420),
         column_config={
@@ -142,7 +142,7 @@ def render_menu_items_table(menu_items: pd.DataFrame) -> None:
     present_cols = preferred_cols + extra_cols
     st.dataframe(
         filtered[present_cols],
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         height=dataframe_height(len(filtered), min_height=260, max_height=620),
         column_config={
@@ -164,6 +164,7 @@ def render_menu_items_table(menu_items: pd.DataFrame) -> None:
         data=filtered[present_cols].to_csv(index=False).encode("utf-8"),
         file_name="menu_macros_selected_area.csv",
         mime="text/csv",
+        width="stretch",
     )
 
 
@@ -217,7 +218,7 @@ def render_unique_chains_panel(library) -> None:
     display_chains = annotated_chains[["chain", "locations", "nutrition_status", "nutrition_on_file"]].copy()
     st.dataframe(
         style_chain_table(display_chains),
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         height=dataframe_height(len(display_chains), min_height=220, max_height=420),
         column_config={
@@ -236,6 +237,7 @@ def render_unique_chains_panel(library) -> None:
         data=annotated_chains.drop(columns=["chain_key"], errors="ignore").to_csv(index=False).encode("utf-8"),
         file_name="fast_food_chains.csv",
         mime="text/csv",
+        width="stretch",
     )
 
 
@@ -244,9 +246,9 @@ def render_selection_panel(map_data) -> None:
     st.subheader("Selection")
     button_left, button_right = st.columns(2)
     with button_left:
-        find_clicked = st.button("Find fast-food chains", type="primary")
+        find_clicked = st.button("Find fast-food chains", type="primary", width="stretch")
     with button_right:
-        clear_clicked = st.button("Clear selection")
+        clear_clicked = st.button("Clear selection", width="stretch")
 
     if clear_clicked:
         st.session_state.locations = pd.DataFrame()
