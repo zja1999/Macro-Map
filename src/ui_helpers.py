@@ -170,11 +170,11 @@ def render_missing_chain_request_panel(missing_chains: list[str]) -> None:
         request_message = nutrition_request_message(selected_chain)
 
         github_col, email_col = st.columns(2)
-        github_col.link_button("Open GitHub request", nutrition_request_url(selected_chain), use_container_width=True)
+        github_col.link_button("Open GitHub request", nutrition_request_url(selected_chain), width="stretch")
 
         email_url = nutrition_request_mailto_url(selected_chain)
         if email_url:
-            email_col.link_button("Email request", email_url, use_container_width=True)
+            email_col.link_button("Email request", email_url, width="stretch")
         else:
             email_col.caption("Email requests can be enabled with `contact_email` in Streamlit secrets.")
 
