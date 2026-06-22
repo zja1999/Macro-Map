@@ -27,6 +27,7 @@ from src.ui_helpers import (
 
 DEFAULT_CENTER = (31.0000, -99.0000)
 DEFAULT_ZOOM = 9
+SEARCH_ZOOM = 11
 MAX_QUERY_AREA_SQ_MI = 250.0
 MAP_HEIGHT_PX = 650
 METERS_PER_MILE = 1609.344
@@ -97,7 +98,9 @@ def add_location_pins(m: folium.Map, locations: pd.DataFrame, highlighted_chain:
 
 def build_map(locations: pd.DataFrame, highlighted_chain: str | None) -> folium.Map:
     """Build a stable map: no auto-location and no viewport tracking."""
-    m = folium.Map(location=list(DEFAULT_CENTER), zoom_start=DEFAULT_ZOOM, control_scale=True, zoom_control=True)
+    center = st.session_state.get("stable_map_center", DEFAULT_CENTER)
+    zoom = st.session_state.get("stable_map_zoom", DEFAULT_ZOOM)
+    m = folium.Map(location=list(center), zoom_start=int(zoom), control_scale=True, zoom_control=True)
 
     Draw(
         export=False,
@@ -238,6 +241,8 @@ def render_selection_panel(map_data) -> None:
         st.session_state.locations = pd.DataFrame()
         st.session_state.chains = pd.DataFrame()
         st.session_state.last_circle_signature = None
+        st.session_state.stable_map_center = DEFAULT_CENTER
+        st.session_state.stable_map_zoom = DEFAULT_ZOOM
         st.session_state.map_reset_token += 1
         st.rerun()
 
@@ -270,6 +275,8 @@ def render_selection_panel(map_data) -> None:
         st.session_state.locations = locations
         st.session_state.chains = unique_chains(locations)
         st.session_state.last_circle_signature = signature
+        st.session_state.stable_map_center = (center_lat, center_lon)
+        st.session_state.stable_map_zoom = SEARCH_ZOOM
         st.rerun()
     except RuntimeError as exc:
         st.error("OpenStreetMap's public Overpass API rejected or timed out on this request.")
@@ -291,6 +298,10 @@ def render_map_chain_finder() -> None:
         st.session_state.last_circle_signature = None
     if "map_reset_token" not in st.session_state:
         st.session_state.map_reset_token = 0
+    if "stable_map_center" not in st.session_state:
+        st.session_state.stable_map_center = DEFAULT_CENTER
+    if "stable_map_zoom" not in st.session_state:
+        st.session_state.stable_map_zoom = DEFAULT_ZOOM
 
     annotated_chains = annotate_chains_with_nutrition(st.session_state.chains, library) if not st.session_state.chains.empty else pd.DataFrame()
     highlighted_chain = selected_chain_from_widget(annotated_chains) if not annotated_chains.empty else None
