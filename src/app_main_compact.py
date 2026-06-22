@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import html
+
 import folium
 import pandas as pd
 import streamlit as st
@@ -23,7 +25,13 @@ from src.nutrition_store import (
 )
 from src.osm_overpass import build_fast_food_bbox_query, parse_fast_food_elements, query_overpass, unique_chains
 from src.recommender import recommend_single_items
-from src.ui_helpers import dataframe_height, inject_responsive_styles, render_missing_chain_request_panel
+from src.ui_helpers import (
+    configured_contact_email,
+    dataframe_height,
+    inject_responsive_styles,
+    nutrition_request_mailto_url,
+    nutrition_request_url,
+)
 
 DEFAULT_CENTER = (31.0000, -99.0000)  # Texas-wide starting view.
 DEFAULT_ZOOM = 6
@@ -73,16 +81,6 @@ def build_map(center: tuple[float, float] = DEFAULT_CENTER, zoom: int = DEFAULT_
         edit_options={"edit": True, "remove": True},
     ).add_to(m)
     return m
-
-
-def style_chain_table(df: pd.DataFrame):
-    """Color chain rows by nutrition coverage without background shading."""
-
-    def row_style(row: pd.Series) -> list[str]:
-        color = "color: #198754; font-weight: 600" if bool(row.get("nutrition_on_file", False)) else "color: #b00020; font-weight: 600"
-        return [color if col in {"chain", "locations", "nutrition_status"} else "" for col in row.index]
-
-    return df.style.apply(row_style, axis=1)
 
 
 def render_single_item_recommendations(menu_items: pd.DataFrame) -> None:
@@ -197,8 +195,75 @@ def render_selected_chain_tabs(library) -> None:
         render_macro_counter(menu_items)
 
 
+def _chain_cell(chain: str, nutrition_on_file: bool) -> str:
+    safe_chain = html.escape(str(chain))
+    if nutrition_on_file:
+        return f'<span class="macro-chain-on-file">{safe_chain}</span>'
+    request_url = html.escape(nutrition_request_url(str(chain)), quote=True)
+    return f'<a class="macro-chain-missing" href="{request_url}" target="_blank" rel="noopener noreferrer">{safe_chain}</a>'
+
+
+def _email_cell(chain: str, nutrition_on_file: bool, show_email_column: bool) -> str:
+    if not show_email_column:
+        return ""
+    if nutrition_on_file:
+        return "<td>—</td>"
+    email_url = nutrition_request_mailto_url(str(chain))
+    if not email_url:
+        return "<td>—</td>"
+    safe_url = html.escape(email_url, quote=True)
+    return f'<td class="macro-chain-email"><a href="{safe_url}">Email draft</a></td>'
+
+
+def render_clickable_chain_table(annotated_chains: pd.DataFrame) -> None:
+    """Render chains as a compact clickable table.
+
+    Missing chains are clickable in the Chain column and open a pre-filled GitHub
+    issue. The email link is intentionally labeled as a draft because mailto
+    cannot send automatically from a Streamlit app.
+    """
+    show_email_column = bool(configured_contact_email())
+    email_header = "<th>Email</th>" if show_email_column else ""
+    rows: list[str] = []
+
+    for _, row in annotated_chains.iterrows():
+        chain = str(row["chain"])
+        locations = int(row.get("locations", 0) or 0)
+        nutrition_on_file = bool(row.get("nutrition_on_file", False))
+        nutrition_status = "On file" if nutrition_on_file else "Missing"
+        status_class = "macro-chain-on-file" if nutrition_on_file else "macro-chain-missing"
+        email_cell = _email_cell(chain, nutrition_on_file, show_email_column)
+        rows.append(
+            "<tr>"
+            f"<td>{_chain_cell(chain, nutrition_on_file)}</td>"
+            f"<td>{locations}</td>"
+            f'<td><span class="{status_class}">{nutrition_status}</span></td>'
+            f"{email_cell}"
+            "</tr>"
+        )
+
+    table_html = (
+        '<div class="macro-chain-table" style="max-height: 420px; overflow-y: auto;">'
+        "<table>"
+        f"<thead><tr><th>Chain</th><th># Locations</th><th>Nutrition</th>{email_header}</tr></thead>"
+        f"<tbody>{''.join(rows)}</tbody>"
+        "</table>"
+        "</div>"
+    )
+    st.markdown(table_html, unsafe_allow_html=True)
+
+    missing_count = int((~annotated_chains["nutrition_on_file"]).sum())
+    if missing_count:
+        if show_email_column:
+            st.caption("Click a red missing chain to open a GitHub request, or use Email draft. Email drafts still require the user to press Send.")
+        else:
+            st.caption("Click a red missing chain to open a pre-filled GitHub request. Email drafts can be enabled with `contact_email` in Streamlit secrets.")
+    else:
+        st.success("All chains in this selection have nutrition CSVs on file.")
+
+
 def render_unique_chains_panel(library) -> None:
-    """Render unique chains and the single missing-data request panel."""
+    """Render unique chains with clickable request links for missing nutrition data."""
     st.subheader("Unique chains")
     chains = st.session_state.chains
     locations = st.session_state.locations
@@ -215,22 +280,8 @@ def render_unique_chains_panel(library) -> None:
     metric_b.metric("Locations found", len(locations))
     st.caption(f"Nutrition coverage: **{covered_count}/{len(annotated_chains)} chains** have CSVs on file.")
 
-    display_chains = annotated_chains[["chain", "locations", "nutrition_status", "nutrition_on_file"]].copy()
-    st.dataframe(
-        style_chain_table(display_chains),
-        width="stretch",
-        hide_index=True,
-        height=dataframe_height(len(display_chains), min_height=220, max_height=420),
-        column_config={
-            "chain": "Chain",
-            "locations": "# Locations",
-            "nutrition_status": "Nutrition",
-            "nutrition_on_file": None,
-        },
-    )
-
-    missing_chains = annotated_chains.loc[~annotated_chains["nutrition_on_file"], "chain"].tolist()
-    render_missing_chain_request_panel(missing_chains)
+    display_chains = annotated_chains[["chain", "locations", "nutrition_status", "nutrition_on_file", "chain_key"]].copy()
+    render_clickable_chain_table(display_chains)
 
     st.download_button(
         "Download chain list CSV",
