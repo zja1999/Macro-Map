@@ -6,11 +6,6 @@ import streamlit as st
 from folium.plugins import Draw
 from streamlit_folium import st_folium
 
-try:
-    from folium.plugins import LocateControl
-except ImportError:  # pragma: no cover - depends on installed folium version
-    LocateControl = None
-
 from src.app_main_compact import render_selected_chain_tabs, style_chain_table
 from src.geojson_utils import (
     SelectionError,
@@ -31,8 +26,7 @@ from src.ui_helpers import (
 )
 
 DEFAULT_CENTER = (31.0000, -99.0000)
-DEFAULT_ZOOM = 6  # Texas-wide fallback when browser geolocation is unavailable or denied.
-STARTER_LOCATION_ZOOM = 10  # Roughly surrounding-area view, about ~20 miles depending on screen size.
+DEFAULT_ZOOM = 6
 SEARCH_ZOOM = 11
 MAX_QUERY_AREA_SQ_MI = 250.0
 MAP_HEIGHT_PX = 650
@@ -102,22 +96,11 @@ def add_location_pins(m: folium.Map, locations: pd.DataFrame, highlighted_chain:
         ).add_to(m)
 
 
-def build_map(locations: pd.DataFrame, highlighted_chain: str | None, auto_locate: bool) -> folium.Map:
-    """Build a stable map.
-
-    Browser location is used only as a one-time starter center. When geolocation
-    is unavailable or denied, the map remains at a Texas-wide fallback view.
-    """
+def build_map(locations: pd.DataFrame, highlighted_chain: str | None) -> folium.Map:
+    """Build a stable map: no browser geolocation and no viewport tracking."""
     center = st.session_state.get("stable_map_center", DEFAULT_CENTER)
     zoom = st.session_state.get("stable_map_zoom", DEFAULT_ZOOM)
     m = folium.Map(location=list(center), zoom_start=int(zoom), control_scale=True, zoom_control=True)
-
-    if LocateControl is not None:
-        LocateControl(
-            auto_start=auto_locate,
-            keep_current_zoom_level=False,
-            locate_options={"maxZoom": STARTER_LOCATION_ZOOM, "watch": False, "setView": True},
-        ).add_to(m)
 
     Draw(
         export=False,
@@ -319,8 +302,6 @@ def render_map_chain_finder() -> None:
         st.session_state.stable_map_center = DEFAULT_CENTER
     if "stable_map_zoom" not in st.session_state:
         st.session_state.stable_map_zoom = DEFAULT_ZOOM
-    if "starter_location_used" not in st.session_state:
-        st.session_state.starter_location_used = False
 
     annotated_chains = annotate_chains_with_nutrition(st.session_state.chains, library) if not st.session_state.chains.empty else pd.DataFrame()
     highlighted_chain = selected_chain_from_widget(annotated_chains) if not annotated_chains.empty else None
@@ -328,16 +309,13 @@ def render_map_chain_finder() -> None:
     map_col, selection_col, chains_col = st.columns([1.8, 0.8, 1.05], gap="large")
 
     with map_col:
-        auto_locate = not bool(st.session_state.starter_location_used)
         map_data = st_folium(
-            build_map(st.session_state.locations, highlighted_chain, auto_locate=auto_locate),
+            build_map(st.session_state.locations, highlighted_chain),
             height=MAP_HEIGHT_PX,
             use_container_width=True,
             returned_objects=["all_drawings", "last_active_drawing"],
             key=f"macro_map_{st.session_state.map_reset_token}",
         )
-        if auto_locate:
-            st.session_state.starter_location_used = True
 
     with selection_col:
         render_selection_panel(map_data)
