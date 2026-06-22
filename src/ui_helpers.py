@@ -17,7 +17,10 @@ def inject_responsive_styles() -> None:
         """
         <style>
             .block-container {
-                max-width: 1500px;
+                width: 100%;
+                max-width: 100%;
+                padding-left: 1.5rem;
+                padding-right: 1.5rem;
                 padding-top: 1.1rem;
                 padding-bottom: 2rem;
             }
