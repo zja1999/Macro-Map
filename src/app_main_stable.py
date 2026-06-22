@@ -6,6 +6,11 @@ import streamlit as st
 from folium.plugins import Draw
 from streamlit_folium import st_folium
 
+try:
+    from folium.plugins import LocateControl
+except ImportError:  # pragma: no cover - depends on installed folium version
+    LocateControl = None
+
 from src.app_main_compact import render_selected_chain_tabs, style_chain_table
 from src.geojson_utils import (
     SelectionError,
@@ -96,11 +101,23 @@ def add_location_pins(m: folium.Map, locations: pd.DataFrame, highlighted_chain:
         ).add_to(m)
 
 
-def build_map(locations: pd.DataFrame, highlighted_chain: str | None) -> folium.Map:
-    """Build a stable map: no auto-location and no viewport tracking."""
+def build_map(locations: pd.DataFrame, highlighted_chain: str | None, auto_locate: bool) -> folium.Map:
+    """Build a stable map.
+
+    User location is used only as a one-time starter center through Leaflet's
+    LocateControl. After that, the map uses the stored app center and never
+    tracks or repeatedly re-centers on browser location.
+    """
     center = st.session_state.get("stable_map_center", DEFAULT_CENTER)
     zoom = st.session_state.get("stable_map_zoom", DEFAULT_ZOOM)
     m = folium.Map(location=list(center), zoom_start=int(zoom), control_scale=True, zoom_control=True)
+
+    if LocateControl is not None:
+        LocateControl(
+            auto_start=auto_locate,
+            keep_current_zoom_level=True,
+            locate_options={"maxZoom": DEFAULT_ZOOM, "watch": False},
+        ).add_to(m)
 
     Draw(
         export=False,
@@ -302,6 +319,8 @@ def render_map_chain_finder() -> None:
         st.session_state.stable_map_center = DEFAULT_CENTER
     if "stable_map_zoom" not in st.session_state:
         st.session_state.stable_map_zoom = DEFAULT_ZOOM
+    if "starter_location_used" not in st.session_state:
+        st.session_state.starter_location_used = False
 
     annotated_chains = annotate_chains_with_nutrition(st.session_state.chains, library) if not st.session_state.chains.empty else pd.DataFrame()
     highlighted_chain = selected_chain_from_widget(annotated_chains) if not annotated_chains.empty else None
@@ -309,13 +328,16 @@ def render_map_chain_finder() -> None:
     map_col, selection_col, chains_col = st.columns([1.8, 0.8, 1.05], gap="large")
 
     with map_col:
+        auto_locate = not bool(st.session_state.starter_location_used)
         map_data = st_folium(
-            build_map(st.session_state.locations, highlighted_chain),
+            build_map(st.session_state.locations, highlighted_chain, auto_locate=auto_locate),
             height=MAP_HEIGHT_PX,
             use_container_width=True,
             returned_objects=["all_drawings", "last_active_drawing"],
             key=f"macro_map_{st.session_state.map_reset_token}",
         )
+        if auto_locate:
+            st.session_state.starter_location_used = True
 
     with selection_col:
         render_selection_panel(map_data)
