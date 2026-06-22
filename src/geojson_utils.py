@@ -15,38 +15,18 @@ METERS_PER_MILE = 1609.344
 METERS_PER_DEGREE_LAT = 111_320.0
 
 
-def is_circle_feature(feature: dict[str, Any] | None) -> bool:
-    """Return True only for Leaflet.draw circle features.
-
-    Browser geolocation and other map artifacts can also appear as Point
-    features, so we require a radius property before treating a Point as the
-    user's search circle.
-    """
-    if not isinstance(feature, dict):
-        return False
-
-    geometry = feature.get("geometry", feature)
-    if geometry.get("type") != "Point":
-        return False
-
-    properties = feature.get("properties") or {}
-    radius = properties.get("radius") or properties.get("_mRadius") or feature.get("radius")
-    return radius is not None
-
-
 def get_latest_drawn_feature(map_data: dict[str, Any] | None) -> dict[str, Any] | None:
-    """Return the latest user-drawn circle feature from streamlit-folium data."""
+    """Return the latest drawn GeoJSON feature from streamlit-folium data."""
     if not map_data:
         return None
 
-    drawings = map_data.get("all_drawings") or []
-    for drawing in reversed(drawings):
-        if is_circle_feature(drawing):
-            return drawing
-
     last = map_data.get("last_active_drawing")
-    if is_circle_feature(last):
+    if last and isinstance(last, dict) and last.get("geometry"):
         return last
+
+    drawings = map_data.get("all_drawings") or []
+    if drawings:
+        return drawings[-1]
 
     return None
 
