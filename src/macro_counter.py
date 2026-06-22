@@ -111,10 +111,17 @@ def targets_from_body_weight(calories: float, weight_lbs: float, activity_level:
     }
 
 
-def apply_macro_targets(targets: dict[str, float]) -> None:
-    """Apply calculated macro targets into Streamlit session state."""
+def apply_macro_targets(targets: dict[str, float], preset_name: str | None = None) -> None:
+    """Apply calculated macro targets into Streamlit session state.
+
+    This is intended to run as a Streamlit widget callback, before the target
+    number_input widgets are instantiated on the rerun. Updating these keys
+    inline after the widgets exist causes StreamlitAPIException.
+    """
     for key in CORE_TARGET_COLS:
         st.session_state[f"macro_target_{key}"] = float(targets.get(key, 0) or 0)
+    if preset_name:
+        st.session_state.macro_last_preset = preset_name
 
 
 def item_label(row: pd.Series) -> str:
@@ -194,6 +201,7 @@ def _load_profile_payload(uploaded_file) -> None:
         st.session_state[f"macro_target_{key}"] = float(targets.get(key, default) or 0)
 
     st.session_state.macro_counter_items = list(payload.get("items", []))
+    st.session_state.macro_profile_loaded = True
 
 
 def _render_preset_buttons() -> None:
@@ -208,11 +216,13 @@ def _render_preset_buttons() -> None:
     for idx, (name, preset) in enumerate(DIET_STYLE_PRESETS.items()):
         targets = targets_from_percentages(calories, preset)
         button_label = f"{name}\n{targets['protein_g']:.0f}P / {targets['carbs_g']:.0f}C / {targets['fat_g']:.0f}F"
-        if preset_cols[idx].button(button_label, key=f"macro_preset_{name}", use_container_width=True):
-            apply_macro_targets(targets)
-            st.session_state.macro_last_preset = name
-            st.success(f"Applied {name} targets.")
-            st.rerun()
+        preset_cols[idx].button(
+            button_label,
+            key=f"macro_preset_{name}",
+            on_click=apply_macro_targets,
+            args=(targets, name),
+            width="stretch",
+        )
 
     with st.expander("Preset details", expanded=False):
         rows = []
@@ -231,7 +241,7 @@ def _render_preset_buttons() -> None:
                     "Notes": preset["description"],
                 }
             )
-        st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+        st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)
 
 
 def _render_body_weight_helper() -> None:
@@ -272,11 +282,13 @@ def _render_body_weight_helper() -> None:
         preview_cols[2].metric("Carbs", f"{targets['carbs_g']:.0f}g")
         preview_cols[3].metric("Fat", f"{targets['fat_g']:.0f}g")
 
-        if st.button("Apply body-aware targets", type="primary", use_container_width=True):
-            apply_macro_targets(targets)
-            st.session_state.macro_last_preset = f"Body-aware {diet_style}"
-            st.success("Applied body-aware macro targets.")
-            st.rerun()
+        st.button(
+            "Apply body-aware targets",
+            type="primary",
+            on_click=apply_macro_targets,
+            args=(targets, f"Body-aware {diet_style}"),
+            width="stretch",
+        )
 
 
 def _render_profile_controls() -> None:
@@ -285,6 +297,8 @@ def _render_profile_controls() -> None:
         "This prototype stores the profile in the current Streamlit session. "
         "Use download/upload to move a profile between visits until a real database is added."
     )
+    if st.session_state.pop("macro_profile_loaded", False):
+        st.success("Profile loaded.")
 
     profile_col, cal_col, protein_col, carb_col, fat_col = st.columns([1.4, 1, 1, 1, 1])
     profile_col.text_input("Profile name", key="macro_profile_name")
@@ -303,16 +317,16 @@ def _render_profile_controls() -> None:
         data=_download_payload().encode("utf-8"),
         file_name="macro_map_profile.json",
         mime="application/json",
-        use_container_width=True,
+        width="stretch",
     )
     uploaded_file = load_col.file_uploader("Load profile/day JSON", type="json")
-    if uploaded_file is not None and load_col.button("Apply uploaded profile", use_container_width=True):
-        try:
-            _load_profile_payload(uploaded_file)
-            st.success("Profile loaded.")
-            st.rerun()
-        except Exception as exc:  # noqa: BLE001 - show user-friendly upload error
-            st.error(f"Could not load that profile file: {exc}")
+    if uploaded_file is not None:
+        load_col.button(
+            "Apply uploaded profile",
+            on_click=_load_profile_payload,
+            args=(uploaded_file,),
+            width="stretch",
+        )
 
 
 def _render_add_items(menu_items: pd.DataFrame) -> None:
@@ -344,7 +358,7 @@ def _render_add_items(menu_items: pd.DataFrame) -> None:
 
     edited = st.data_editor(
         editable[present_cols],
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         height=360,
         disabled=[col for col in present_cols if col not in {"add", "quantity"}],
@@ -363,7 +377,7 @@ def _render_add_items(menu_items: pd.DataFrame) -> None:
         },
     )
 
-    if st.button("Add checked items to macro counter", type="primary", use_container_width=True):
+    if st.button("Add checked items to macro counter", type="primary", width="stretch"):
         selected = edited[edited["add"] == True]  # noqa: E712 - pandas boolean mask
         if selected.empty:
             st.warning("Check at least one item first.")
@@ -400,7 +414,7 @@ def _render_totals() -> None:
     log.insert(0, "remove", False)
     edited_log = st.data_editor(
         log[[col for col in display_cols if col in log.columns]],
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         disabled=[col for col in display_cols if col != "remove"],
         column_config={
@@ -418,11 +432,11 @@ def _render_totals() -> None:
     )
 
     remove_col, clear_col = st.columns(2)
-    if remove_col.button("Remove checked items", use_container_width=True):
+    if remove_col.button("Remove checked items", width="stretch"):
         remove_ids = set(edited_log.loc[edited_log["remove"] == True, "entry_id"].tolist())  # noqa: E712
         st.session_state.macro_counter_items = [entry for entry in entries if entry.get("entry_id") not in remove_ids]
         st.rerun()
-    if clear_col.button("Clear counter", use_container_width=True):
+    if clear_col.button("Clear counter", width="stretch"):
         st.session_state.macro_counter_items = []
         st.rerun()
 
